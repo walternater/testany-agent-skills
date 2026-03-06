@@ -1,5 +1,5 @@
 ---
-name: orchestrator
+name: testany-orchestrator
 description: 配置 Testany 测试编排 - 创建 Gatekeeper(Webhook 触发器)、设置定时计划
 ---
 

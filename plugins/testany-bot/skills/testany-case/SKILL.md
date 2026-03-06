@@ -1,6 +1,6 @@
 ---
-name: case
-description: Testany 测试用例 CRUD - 创建/查询/更新/删除单个或批量 case（编写脚本请用 /case-writing）
+name: testany-case
+description: Testany 测试用例 CRUD - 创建/查询/更新/删除单个或批量 case（编写脚本请用 /testany-case-writing）
 argument-hint: "[操作] [描述]，如：创建 case、查看 A1B2C3D4、删除我的所有 case"
 ---
 
@@ -9,7 +9,7 @@ argument-hint: "[操作] [描述]，如：创建 case、查看 A1B2C3D4、删除
 本 skill 通过 Testany MCP 工具管理 **Testany 平台上的测试用例**。
 所有操作都是对 Testany 平台的远程 API 调用，不涉及本地文件系统。
 
-**注意**：如果用户需要**编写**测试脚本，请告知使用 `/case-writing` 命令。
+**注意**：如果用户需要**编写**测试脚本，请告知使用 `/testany-case-writing` 命令。
 
 用户输入: $ARGUMENTS
 
@@ -219,7 +219,7 @@ Testany 使用 **labels** 实现虚拟目录结构：
 
 | 场景 | 处理方式 |
 |------|---------|
-| 用户没提供脚本但想创建 case | 建议使用 `/case-writing` 先编写脚本 |
+| 用户没提供脚本但想创建 case | 建议使用 `/testany-case-writing` 先编写脚本 |
 | 需要 relay 输出 | 1) 配置 `type='output'` 环境变量，2) 代码中 POST 到 `TESTANY_OUTPUT_RELAY_SERVICE` |
 | 需要使用凭证 | 1) 绑定凭证到 case，2) 代码中调用 `TESTANY_SECRETS_SERVICE` API |
 | 更新已有 case | 先 `testany_get_case` 获取当前配置，用 AskUserQuestion 确认修改项 |

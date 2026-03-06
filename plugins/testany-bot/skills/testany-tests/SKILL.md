@@ -1,5 +1,5 @@
 ---
-name: tests
+name: testany-tests
 description: 执行和监控 Testany 测试 - 触发 Pipeline 执行、查看结果、检查状态
 ---
 
@@ -64,7 +64,7 @@ description: 执行和监控 Testany 测试 - 触发 Pipeline 执行、查看结
 - 通过 case 数量
 - 失败 case 列表（如有）
 - 执行耗时
-- 下一步建议（如失败则建议"使用 /debug 排查失败原因"）
+- 下一步建议（如失败则建议"使用 /testany-debug 排查失败原因"）
 
 ## 参考文档
 

@@ -1,5 +1,5 @@
 ---
-name: workspace
+name: testany-workspace
 description: 管理 Testany 工作空间 - 成员管理、权限配置、团队组织
 ---
 

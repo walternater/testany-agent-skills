@@ -39,26 +39,26 @@ testany-bot/
     │       ├── concepts.md
     │       ├── executors.md
     │       └── pipeline-yaml.md
-    ├── case/SKILL.md
-    ├── case-writing/SKILL.md
-    ├── pipeline/SKILL.md
-    ├── tests/SKILL.md
-    ├── debug/SKILL.md
+    ├── testany-case/SKILL.md
+    ├── testany-case-writing/SKILL.md
+    ├── testany-pipeline/SKILL.md
+    ├── testany-tests/SKILL.md
+    ├── testany-debug/SKILL.md
     ├── cicd/SKILL.md
-    └── workspace/SKILL.md
+    └── testany-workspace/SKILL.md
 ```
 
 ## 技能列表
 
 | 技能 | 描述 | 主要操作 |
 |------|------|---------|
-| **case** | 测试用例管理 | 创建、配置、更新用例，上传脚本 |
-| **case-writing** | 测试脚本编写 | 根据需求生成测试用例文档和脚本 |
-| **pipeline** | 流水线编排 | 创建 Pipeline，配置依赖和 Relay |
-| **tests** | 测试执行 | 触发 Pipeline 执行，监控状态 |
-| **debug** | 故障诊断 | 分析失败原因，查看日志 |
-| **orchestrator** | 测试编排 | 创建门禁、定时计划，提供集成代码 |
-| **workspace** | 工作空间管理 | 成员管理、权限配置 |
+| **testany-case** | 测试用例管理 | 创建、配置、更新用例，上传脚本 |
+| **testany-case-writing** | 测试脚本编写 | 根据需求生成测试用例文档和脚本 |
+| **testany-pipeline** | 流水线编排 | 创建 Pipeline，配置依赖和 Relay |
+| **testany-tests** | 测试执行 | 触发 Pipeline 执行，监控状态 |
+| **testany-debug** | 故障诊断 | 分析失败原因，查看日志 |
+| **testany-orchestrator** | 测试编排 | 创建门禁、定时计划，提供集成代码 |
+| **testany-workspace** | 工作空间管理 | 成员管理、权限配置 |
 | **testany-guide** | 参考知识 | 核心概念、Executor 配置、YAML 语法 |
 
 ## 使用方式
