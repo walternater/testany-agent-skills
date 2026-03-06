@@ -1,5 +1,5 @@
 ---
-name: debug
+name: testany-debug
 description: 分析 Testany 测试失败原因 - 排查问题、查看日志、定位根因
 ---
 

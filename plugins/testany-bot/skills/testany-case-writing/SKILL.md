@@ -1,5 +1,5 @@
 ---
-name: case-writing
+name: testany-case-writing
 description: 测试用例和脚本编写助手 - 根据需求生成测试用例文档和 Testany-compatible 测试脚本
 argument-hint: "[需求描述]，如：根据 PRD 生成登录测试、写一个 API 测试脚本"
 ---
@@ -45,7 +45,7 @@ argument-hint: "[需求描述]，如：根据 PRD 生成登录测试、写一个
 ### Phase 4: 交付
 
 询问用户是否要上传到 Testany：
-- **是** → 告知使用 `/case` 命令上传
+- **是** → 告知使用 `/testany-case` 命令上传
 - **否** → 仅保留本地文件
 
 ---
@@ -183,7 +183,7 @@ requests.post(relay_service, json={"ACCESS_TOKEN": token})
 脚本编写完成后，告知用户：
 1. 已生成的文件列表
 2. ZIP 包位置
-3. 使用 `/case` 命令可上传到 Testany
+3. 使用 `/testany-case` 命令可上传到 Testany
 
 ---
 
