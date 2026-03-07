@@ -26,6 +26,15 @@ Case (测试用例)
 - Executor 配置详解 → [executors.md](references/executors.md)
 - Pipeline YAML 语法 → [pipeline-yaml.md](references/pipeline-yaml.md)
 
+## 宿主能力适配
+
+`testany-bot` 通用版按**能力**而不是按**宿主品牌**分支：
+
+- 如果宿主支持结构化提问工具（如 AskUserQuestion），优先一次性收集缺失信息。
+- 如果宿主不支持该工具，则用普通文本在当前对话中提问；低风险字段可给出默认值建议，但必须明确告知用户。
+- 如果宿主支持 slash command / router，可推荐相关 workflow 的命令入口。
+- 如果宿主不支持 slash command，不要阻塞任务；直接在当前线程继续对应 workflow。
+
 ## 标识符格式
 
 | 类型 | 格式 | 示例 |

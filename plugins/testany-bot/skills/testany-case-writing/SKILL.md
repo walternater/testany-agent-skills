@@ -10,6 +10,11 @@ argument-hint: "[需求描述]，如：根据 PRD 生成登录测试、写一个
 
 用户输入: $ARGUMENTS
 
+## 宿主能力适配
+
+- 如果宿主支持 slash command，可把 `testany-case` 作为推荐上传入口。
+- 如果宿主不支持 slash command，则直接在当前线程切换到 `testany-case` workflow，继续上传脚本或配置 metadata。
+
 ## 职责
 
 - 根据用户需求生成测试用例文档
@@ -45,7 +50,7 @@ argument-hint: "[需求描述]，如：根据 PRD 生成登录测试、写一个
 ### Phase 4: 交付
 
 询问用户是否要上传到 Testany：
-- **是** → 告知使用 `/testany-case` 命令上传
+- **是** → 切换到 `testany-case` workflow 上传；如宿主支持 slash command，也可建议 `/testany-case`
 - **否** → 仅保留本地文件
 
 ---
@@ -183,7 +188,7 @@ requests.post(relay_service, json={"ACCESS_TOKEN": token})
 脚本编写完成后，告知用户：
 1. 已生成的文件列表
 2. ZIP 包位置
-3. 使用 `/testany-case` 命令可上传到 Testany
+3. 可切换到 `testany-case` workflow 上传到 Testany；如宿主支持 slash command，也可建议 `/testany-case`
 
 ---
 

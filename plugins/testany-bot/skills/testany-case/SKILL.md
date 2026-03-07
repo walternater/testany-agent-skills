@@ -1,6 +1,6 @@
 ---
 name: testany-case
-description: Testany 测试用例 CRUD - 创建/查询/更新/删除单个或批量 case（编写脚本请用 /testany-case-writing）
+description: Testany 测试用例 CRUD - 创建/查询/更新/删除单个或批量 case（编写脚本请转到 testany-case-writing workflow）
 argument-hint: "[操作] [描述]，如：创建 case、查看 A1B2C3D4、删除我的所有 case"
 ---
 
@@ -9,9 +9,17 @@ argument-hint: "[操作] [描述]，如：创建 case、查看 A1B2C3D4、删除
 本 skill 通过 Testany MCP 工具管理 **Testany 平台上的测试用例**。
 所有操作都是对 Testany 平台的远程 API 调用，不涉及本地文件系统。
 
-**注意**：如果用户需要**编写**测试脚本，请告知使用 `/testany-case-writing` 命令。
+**注意**：如果用户需要**编写**测试脚本，请切换到 `testany-case-writing` workflow；如宿主支持 slash command，也可建议 `/testany-case-writing`。
 
 用户输入: $ARGUMENTS
+
+---
+
+## 宿主能力适配
+
+- 优先使用宿主提供的结构化提问工具（如 AskUserQuestion）一次性收集缺失信息。
+- 如果宿主不支持该工具，则用一条普通消息集中提问相同问题；低风险字段可给出默认值建议。
+- 如果宿主支持 slash command，可推荐相关 workflow 的命令入口；否则直接在当前线程继续对应 workflow。
 
 ---
 
@@ -45,9 +53,9 @@ argument-hint: "[操作] [描述]，如：创建 case、查看 A1B2C3D4、删除
 - `testany_filter_case_runtimes` → 获取运行环境列表（uuid + name）
 - `testany_get_my_workspaces` → 获取用户有权限的工作空间列表
 
-#### 阶段 2: 统一询问用户（一次 AskUserQuestion）
+#### 阶段 2: 一次性收集缺失信息（优先使用结构化提问工具）
 
-使用 AskUserQuestion 一次性询问以下问题：
+优先使用结构化提问工具一次性询问以下问题；如宿主不支持，则用一条普通消息集中提问：
 
 | 问题 | 类型 | 选项来源 |
 |------|------|---------|
@@ -56,7 +64,7 @@ argument-hint: "[操作] [描述]，如：创建 case、查看 A1B2C3D4、删除
 | 可见性 | 单选 | "全局可见（所有人）" / "仅特定工作空间可见" |
 | 工作空间 | 多选 | 阶段 1 获取的 workspaces（仅当选择"特定工作空间"时需要） |
 
-**注意**：AskUserQuestion 最多支持 4 个问题。如果用户选择"全局可见"，workspace 问题可跳过。
+**注意**：如果使用 AskUserQuestion，该工具最多支持 4 个问题。如果用户选择"全局可见"，workspace 问题可跳过。
 
 #### 阶段 3: 创建 case
 
@@ -102,7 +110,7 @@ argument-hint: "[操作] [描述]，如：创建 case、查看 A1B2C3D4、删除
 #### 更新配置流程
 
 1. 调用 `testany_get_case` 获取当前配置
-2. 使用 AskUserQuestion 确认要修改哪些字段及新值
+2. 优先使用结构化提问工具确认要修改哪些字段及新值；如宿主不支持，则用普通文本确认
 3. 调用 `testany_update_case` 提交更新（只传需要修改的字段）
 
 #### 更新脚本
@@ -219,10 +227,10 @@ Testany 使用 **labels** 实现虚拟目录结构：
 
 | 场景 | 处理方式 |
 |------|---------|
-| 用户没提供脚本但想创建 case | 建议使用 `/testany-case-writing` 先编写脚本 |
+| 用户没提供脚本但想创建 case | 建议切换到 `testany-case-writing` workflow；如宿主支持 slash command，也可建议 `/testany-case-writing` |
 | 需要 relay 输出 | 1) 配置 `type='output'` 环境变量，2) 代码中 POST 到 `TESTANY_OUTPUT_RELAY_SERVICE` |
 | 需要使用凭证 | 1) 绑定凭证到 case，2) 代码中调用 `TESTANY_SECRETS_SERVICE` API |
-| 更新已有 case | 先 `testany_get_case` 获取当前配置，用 AskUserQuestion 确认修改项 |
+| 更新已有 case | 先 `testany_get_case` 获取当前配置，再用结构化提问工具或普通文本确认修改项 |
 
 ---
 

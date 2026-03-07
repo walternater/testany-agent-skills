@@ -16,7 +16,7 @@ Skills 是包含指令、脚本和资源的文件夹，Claude 可以动态加载
 | **testany-eng** | 研发流程 | `/testany-eng:brd-interviewer`, `/testany-eng:uc-interviewer`, `/testany-eng:prd-writer`, `/testany-eng:prd-reviewer`, `/testany-eng:prd-studio`, `/testany-eng:api-writer`, `/testany-eng:api-reviewer`, `/testany-eng:guardrails-writer`, `/testany-eng:guardrails-reviewer`, `/testany-eng:hld-writer`, `/testany-eng:hld-reviewer`, `/testany-eng:runbook-writer` |
 | **testany-llm** | AI/LLM 工具 | `/testany-llm:skill-creator`, `/testany-llm:prompt-optimizer` |
 | **testany-mrkt** | 营销内容 | `/testany-mrkt:media-writer` |
-| **testany-bot** | 测试平台（通用版） | `/testany-bot:case`, `/testany-bot:case-writing`, `/testany-bot:pipeline`, `/testany-bot:tests`, `/testany-bot:debug`, `/testany-bot:orchestrator`, `/testany-bot:workspace` |
+| **testany-bot** | 测试平台（通用版，按宿主能力适配） | `/testany-bot:case`, `/testany-bot:case-writing`, `/testany-bot:pipeline`, `/testany-bot:tests`, `/testany-bot:debug`, `/testany-bot:orchestrator`, `/testany-bot:workspace` |
 
 # 仓库结构
 
@@ -32,7 +32,7 @@ testany-agent-skills/
 │   ├── testany-mrkt/          # 营销内容工具集
 │   │   ├── commands/
 │   │   └── skills/
-│   └── testany-bot/           # Testany 测试平台（通用版，跨平台兼容）
+│   └── testany-bot/           # Testany 测试平台（通用版，交互原语按宿主能力适配）
 │       ├── commands/
 │       └── skills/
 └── CHANGELOG.md               # 版本变更记录
@@ -53,7 +53,7 @@ testany-agent-skills/
    - `testany-eng` - 研发流程（BRD/PRD/HLD）
    - `testany-llm` - AI 工具（Skill/Prompt）
    - `testany-mrkt` - 营销内容（自媒体）
-   - `testany-bot` - 测试平台（通用版，跨平台兼容）
+   - `testany-bot` - 测试平台（通用版，按宿主能力适配）
 4. 选择 `Install now`
 
 ## 使用
@@ -108,7 +108,7 @@ testany-agent-skills/
 
 ## testany-bot（测试平台 - 通用版）
 
-跨平台兼容版本，适用于 VS Code Copilot、GitHub Copilot 等 AI 平台。需要配置 Testany MCP Server。
+通用版，适用于 VS Code Copilot、GitHub Copilot、Claude Code 等 AI 平台。Skill 格式与 MCP workflow 跨平台复用；结构化问答与 slash command 会按宿主能力自动适配。需要配置 Testany MCP Server。
 
 | 命令 | 描述 |
 |------|------|

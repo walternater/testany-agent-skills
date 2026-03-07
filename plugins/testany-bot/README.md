@@ -4,14 +4,16 @@ Testany 测试平台智能助手，支持测试用例管理、流水线编排、
 
 ## 兼容性
 
-| 平台 | 支持状态 |
-|------|---------|
-| VS Code Copilot | ✅ |
-| GitHub Copilot | ✅ |
-| Claude Code | ✅ |
-| 其他 AI Agent 平台 | ✅ |
+通用版的含义是：**Skill 格式、MCP workflow 和领域知识可跨平台复用**；宿主是否提供结构化提问、slash command 等交互增强能力，则取决于具体平台。
 
-本插件遵循 [Agent Skills 公共规范](https://agentskills.io)，仅使用 `name` 和 `description` 两个标准字段，确保跨平台兼容。
+| 能力层 | 兼容性说明 |
+|--------|-----------|
+| Skill 发现与加载 | ✅ 遵循 [Agent Skills 公共规范](https://agentskills.io)，使用标准 `name` / `description` 字段 |
+| MCP 工具调用 | ✅ 只要宿主支持 MCP，即可执行核心 Testany workflow |
+| 结构化提问工具（如 AskUserQuestion） | 可选增强，视宿主能力而定 |
+| Slash command / router | 可选增强，视宿主能力而定 |
+
+已验证可复用 `testany-bot` workflow 的宿主包括 Claude Code、VS Code Copilot、GitHub Copilot；其中 Claude Code 对结构化提问和 slash command 的支持更完整。
 
 ## 前置要求
 
@@ -63,7 +65,7 @@ testany-bot/
 
 ## 使用方式
 
-### 命令触发
+### 命令触发（宿主支持 slash command 时）
 
 ```
 /case 上传这个测试脚本到 Testany
@@ -83,20 +85,23 @@ testany-bot/
 这个测试为什么失败了？
 ```
 
+如果宿主不支持 slash command，直接使用自然语言触发对应 workflow 即可。
+
 ## 架构特点
 
 **自包含技能架构**：每个技能文件包含完整的知识和工作流程，无需依赖外部 Subagent。
 
 ```mermaid
 flowchart LR
-    User[用户] --> Command["/command"]
-    Command --> Skill["Self-contained Skill"]
+    User[用户] --> Entry["自然语言 / slash command（可选）"]
+    Entry --> Skill["Self-contained Skill"]
     Skill --> MCP["Testany MCP"]
     MCP --> Platform["Testany Platform"]
 ```
 
 优点：
-- 跨平台兼容
+- Skill 格式与 MCP workflow 跨平台复用
+- 交互原语按宿主能力适配
 - 简单直接
 - 无需复杂调度
 
@@ -122,7 +127,7 @@ flowchart LR
 |------|---------------------|---------------------------------------|
 | 架构 | 自包含 Skills | Subagent + Router |
 | Context 隔离 | ❌ | ✅ |
-| 兼容性 | 跨平台 | 仅 Claude Code |
+| 兼容性 | Skill 格式 + MCP workflow 跨平台 | 仅 Claude Code |
 | Frontmatter | 仅 name/description | 含 context/agent 等专用字段 |
 
 如果您使用 Claude Code，推荐使用 [testany-bot-for-claude](../testany-bot-for-claude) 以获得更好的 Context 管理和专业化体验。
