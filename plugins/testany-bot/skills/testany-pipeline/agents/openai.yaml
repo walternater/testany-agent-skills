@@ -1,0 +1,6 @@
+interface:
+  display_name: "Testany Pipeline"
+  short_description: "Manage Testany pipelines and flow"
+  icon_small: "./assets/testany-logo-small.png"
+  icon_large: "./assets/testany-logo.svg"
+  default_prompt: "Use $testany-pipeline to create, update, or inspect a Testany pipeline for this test flow."

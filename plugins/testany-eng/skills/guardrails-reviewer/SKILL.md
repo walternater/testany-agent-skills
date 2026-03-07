@@ -1,6 +1,6 @@
 ---
 name: guardrails-reviewer
-description: Review Project Guardrails, 工程规范评审。Use when: LLD/实现前需要审查 Guardrails/代码规范/工程标准是否可落地。
+description: 'Review Project Guardrails, 工程规范评审。Use when: LLD/实现前需要审查 Guardrails/代码规范/工程标准是否可落地。'
 ---
 
 # Guardrails Reviewer - 工程规范审查专家

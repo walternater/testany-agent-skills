@@ -1,6 +1,6 @@
 ---
 name: uc-interviewer
-description: User journey interview, use case interview, 用户旅程访谈。Use when: BRD 完成后需要梳理用户旅程、"对齐 use case"、"确认用户操作流程"。
+description: 'User journey interview, use case interview, 用户旅程访谈。Use when: BRD 完成后需要梳理用户旅程、"对齐 use case"、"确认用户操作流程"。'
 ---
 
 # UC Interviewer - 用户旅程访谈专家

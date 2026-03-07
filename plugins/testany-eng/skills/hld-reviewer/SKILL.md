@@ -1,6 +1,6 @@
 ---
 name: hld-reviewer
-description: HLD review, High-Level Design review, 技术方案评审。Use when: HLD 完成后、进入 LLD/实现前需要审查技术设计、检测 PRD→HLD 漂移。
+description: 'HLD review, High-Level Design review, 技术方案评审。Use when: HLD 完成后、进入 LLD/实现前需要审查技术设计、检测 PRD→HLD 漂移。'
 ---
 
 # HLD Reviewer - 技术方案审查专家

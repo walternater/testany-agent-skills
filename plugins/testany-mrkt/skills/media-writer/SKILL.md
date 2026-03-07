@@ -1,6 +1,6 @@
 ---
 name: media-writer
-description: Social media writing, content creation, 自媒体写作。Use when: 需要写微信公众号/知乎/小红书/LinkedIn/Medium/Reddit 文章。
+description: 'Social media writing, content creation, 自媒体写作。Use when: 需要写微信公众号/知乎/小红书/LinkedIn/Medium/Reddit 文章。'
 ---
 
 # Media Writer - 自媒体写作工作流

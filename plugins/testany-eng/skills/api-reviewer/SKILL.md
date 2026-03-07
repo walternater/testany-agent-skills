@@ -1,6 +1,6 @@
 ---
 name: api-reviewer
-description: API contract review, 接口契约评审。Use when: PRD 完成后、HLD/LLD/实现前需要审查 OpenAPI/AsyncAPI/GraphQL/gRPC/WebSocket/SSE/Webhook/SDK/文件格式/IPC-CLI 契约。
+description: 'API contract review, 接口契约评审。Use when: PRD 完成后、HLD/LLD/实现前需要审查 OpenAPI/AsyncAPI/GraphQL/gRPC/WebSocket/SSE/Webhook/SDK/文件格式/IPC-CLI 契约。'
 ---
 
 # API Reviewer - 接口契约审查专家

@@ -1,6 +1,6 @@
 ---
 name: prd-reviewer
-description: PRD review, 需求评审, 检查 PRD 质量。Use when: PRD 完成后需要评审、"审查 PRD"、"PRD 评审"、"需求评审"。
+description: 'PRD review, 需求评审, 检查 PRD 质量。Use when: PRD 完成后需要评审、"审查 PRD"、"PRD 评审"、"需求评审"。'
 ---
 
 # PRD Reviewer

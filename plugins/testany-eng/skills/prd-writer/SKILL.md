@@ -1,6 +1,6 @@
 ---
 name: prd-writer
-description: Write PRD, 写产品需求文档。Use when: 需要写新功能 PRD（有UI/无UI）、第三方集成、功能重构、性能/安全优化需求。
+description: 'Write PRD, 写产品需求文档。Use when: 需要写新功能 PRD（有UI/无UI）、第三方集成、功能重构、性能/安全优化需求。'
 ---
 
 # PRD Writer

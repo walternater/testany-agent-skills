@@ -1,6 +1,6 @@
 ---
 name: prd-studio
-description: PRD automation, PRD 全流程。Use when: "帮我写个 PRD 并审查通过"、"自动完成 PRD"、"PRD 全流程"。
+description: 'PRD automation, PRD 全流程。Use when: "帮我写个 PRD 并审查通过"、"自动完成 PRD"、"PRD 全流程"。'
 ---
 
 # PRD Studio - PRD 全自动工作室

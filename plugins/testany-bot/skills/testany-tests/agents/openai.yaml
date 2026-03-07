@@ -1,0 +1,6 @@
+interface:
+  display_name: "Testany Tests"
+  short_description: "Run Testany pipelines and watch results"
+  icon_small: "./assets/testany-logo-small.png"
+  icon_large: "./assets/testany-logo.svg"
+  default_prompt: "Use $testany-tests to run this Testany pipeline and monitor the execution results."

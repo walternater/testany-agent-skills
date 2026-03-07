@@ -1,0 +1,6 @@
+interface:
+  display_name: "Testany Case Writing"
+  short_description: "Draft cases and Testany-ready scripts"
+  icon_small: "./assets/testany-logo-small.png"
+  icon_large: "./assets/testany-logo.svg"
+  default_prompt: "Use $testany-case-writing to draft test cases and Testany-compatible scripts for this requirement."

@@ -1,6 +1,6 @@
 ---
 name: brd-interviewer
-description: BRD interview, 业务需求访谈。Use when: 需要将模糊的业务想法梳理成 BRD、"帮我梳理业务需求"、"老板说要做 XXX"、"这个需求不太清楚"、"写 BRD"。
+description: 'BRD interview, 业务需求访谈。Use when: 需要将模糊的业务想法梳理成 BRD、"帮我梳理业务需求"、"老板说要做 XXX"、"这个需求不太清楚"、"写 BRD"。'
 ---
 
 # BRD Interviewer - 业务需求访谈专家

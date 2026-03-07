@@ -1,6 +1,6 @@
 ---
 name: runbook-writer
-description: Write Runbook, 撰写运维手册。Use when: LLD 完成后需要编写部署、回滚、监控、故障处理等运维文档。
+description: 'Write Runbook, 撰写运维手册。Use when: LLD 完成后需要编写部署、回滚、监控、故障处理等运维文档。'
 ---
 
 # Runbook Writer - 运维手册编写

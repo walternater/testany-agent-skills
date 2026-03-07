@@ -1,6 +1,6 @@
 ---
 name: lld-writer
-description: Write LLD, Low-Level Design, 写详细设计。Use when: PRD/HLD/API Contract 完成后需要写模块设计、接口设计、实现级技术方案。
+description: 'Write LLD, Low-Level Design, 写详细设计。Use when: PRD/HLD/API Contract 完成后需要写模块设计、接口设计、实现级技术方案。'
 ---
 
 # LLD Writer

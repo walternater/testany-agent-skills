@@ -1,0 +1,6 @@
+interface:
+  display_name: "Testany Guide"
+  short_description: "Reference Testany concepts and config"
+  icon_small: "./assets/testany-logo-small.png"
+  icon_large: "./assets/testany-logo.svg"
+  default_prompt: "Use $testany-guide to explain the relevant Testany concepts and configuration for this task."
