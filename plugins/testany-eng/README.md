@@ -1,15 +1,42 @@
 # testany-eng
 
-研发流程工具集：从业务需求到技术设计的完整链路。
+研发流程工具集：从业务需求到测试设计与运维准备的完整链路。
 
 ## 概述
 
-testany-eng 提供一套结构化的研发文档工具，覆盖从业务想法到技术方案的全流程：
+testany-eng 提供一套结构化的研发文档工具，覆盖从业务想法到测试设计与交付准备的全流程：
 
 - **需求阶段**：BRD 访谈 → 用户旅程对齐 → PRD 撰写/审查
-- **设计阶段**：API 契约撰写/审查 → HLD 撰写/审查 → LLD 撰写/审查（对齐 Guardrails 基线）
+- **设计阶段**：API 契约撰写/审查 → HLD 撰写/审查 → 测试策略撰写/评审 → LLD 撰写/审查
+- **测试与交付准备阶段**：测试规格/测试包撰写 → 测试门禁评审 → Runbook 撰写
 
 每个环节都有明确的输入输出和质量门禁，确保文档质量和上下游衔接。
+
+## 追溯元数据约定
+
+testany-eng 正在引入统一的 traceability metadata contract，用于后续的 RTM 生成、覆盖率校验和文档间自动追溯。
+
+- canonical 设计稿：`references/traceability-schema/traceability-schema-v1.md`
+- PRD profile v1 示例：`references/traceability-schema/prd-profile-v1.example.yaml`
+- Test Strategy profile v1 示例：`references/traceability-schema/test-strategy-profile-v1.example.yaml`
+- Test Spec profile v1 示例：`references/traceability-schema/test-spec-profile-v1.example.yaml`
+- trace-lint 契约：`references/traceability-schema/trace-lint-contract-v1.md`
+- trace-build-rtm 契约：`references/traceability-schema/trace-build-rtm-contract-v1.md`
+
+当前 rollout 策略是：**schema 一次定义完整，当前已接入 PRD / Test Strategy / Test Spec 三层。**
+
+最直接的校验命令：
+
+```bash
+python3 plugins/testany-eng/scripts/trace_lint.py <PRD.md 或 metadata.yaml>
+python3 plugins/testany-eng/scripts/trace_lint.py --strict <PRD.md 或 metadata.yaml>
+python3 plugins/testany-eng/scripts/trace_lint.py --format json <PRD.md 或 metadata.yaml>
+python3 plugins/testany-eng/scripts/trace_lint.py plugins/testany-eng/references/traceability-schema/test-strategy-profile-v1.example.yaml
+python3 plugins/testany-eng/scripts/trace_lint.py plugins/testany-eng/references/traceability-schema/test-spec-profile-v1.example.yaml
+python3 plugins/testany-eng/scripts/trace_build_rtm.py <多个 metadata 文档>
+python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <多个 metadata 文档>
+python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <PRD.md> <Test-Strategy.md> <Test-Spec.md>
+```
 
 ---
 
@@ -37,9 +64,17 @@ flowchart TD
     N --> O[/hld-writer/]
     O --> P[/hld-reviewer/]
     P --> Q[📄 HLD 准出]
-    Q --> R[/lld-writer/]
-    R --> S[/lld-reviewer/]
-    S --> T[📄 LLD 准出]
+    Q --> R[/test-strategy-writer/]
+    R --> S[/test-strategy-reviewer/]
+    S --> T[📄 Test Strategy 准出]
+    T --> U[/lld-writer/]
+    U --> V[/lld-reviewer/]
+    V --> W[📄 LLD 准出]
+    W --> X[/test-spec-writer/]
+    X --> Y[/test-reviewer/]
+    Y --> Z[📄 测试准出]
+    Z --> AA[/runbook-writer/]
+    AA --> AB[📄 Runbook]
 ```
 
 ---
@@ -76,8 +111,13 @@ flowchart TD
 | Guardrails 写完了，需要评审 | `/guardrails-reviewer` | 检查规范可执行性与覆盖性 |
 | 有 PRD + API Contract，要写技术方案 | `/hld-writer` | 基于 PRD + 契约撰写 HLD |
 | HLD 写完了，需要技术评审 | `/hld-reviewer` | 检测 PRD→HLD 漂移 |
+| HLD 准出了，要定义测试方法和门禁 | `/test-strategy-writer` | 基于 PRD/API/HLD 定义测试策略 |
+| 测试策略写完了，需要评审 | `/test-strategy-reviewer` | 审查风险覆盖、分层与环境策略 |
 | HLD 准出了，要写详细设计 | `/lld-writer` | 将 HLD 细化为可实现的设计 |
 | LLD 写完了，需要设计评审 | `/lld-reviewer` | 检测 HLD→LLD 一致性 |
+| LLD 准出了，要写完整测试包 | `/test-spec-writer` | 产出 test case package、追溯矩阵与执行说明 |
+| 测试包写完了，需要测试门禁评审 | `/test-reviewer` | 审查覆盖、证据与残余风险 |
+| 测试门禁通过后，要准备运维手册 | `/runbook-writer` | 基于 HLD/LLD/Test 输出生产就绪 Runbook |
 
 ### 决策树
 
@@ -89,6 +129,8 @@ flowchart TD
     Start --> D[有 API Contract]
     Start --> E[有 HLD]
     Start --> F[有 LLD]
+    Start --> G[有 Test Strategy]
+    Start --> H[有 Test Spec]
 
     A --> A1[/brd-interviewer/]
 
@@ -110,10 +152,19 @@ flowchart TD
 
     E --> E1{HLD 已准出？}
     E1 -->|否| E2[/hld-reviewer/]
-    E1 -->|是| E3[/lld-writer/]
-    E3 --> E4[/lld-reviewer/]
+    E1 -->|是| E3[/test-strategy-writer/]
+    E3 --> E4[/test-strategy-reviewer/]
 
-    F --> F1[/lld-reviewer/]
+    F --> F1{LLD 已准出？}
+    F1 -->|否| F2[/lld-reviewer/]
+    F1 -->|是| F3[/test-spec-writer/]
+
+    G --> G1{Test Strategy 已准出？}
+    G1 -->|否| G2[/test-strategy-reviewer/]
+    G1 -->|是| G3[/lld-writer/]
+    G3 --> G4[/lld-reviewer/]
+
+    H --> H1[/test-reviewer/]
 ```
 
 ---
@@ -336,6 +387,46 @@ flowchart TD
 
 ---
 
+### test-strategy-writer
+
+**用途**：基于 PRD、API Contract、HLD 产出测试策略，明确怎么测
+
+**特点**：
+- 风险驱动：先识别关键业务/数据/兼容/稳定性风险
+- 分层明确：System Integration / E2E / Regression / Compatibility / Non-functional 分工清晰
+- 强制环境/数据/依赖策略
+- 明确开发内建验证属于上游前置条件
+- 只写独立测试方法，不写详细 case
+
+**输入**：PRD 路径 + API Contract 路径 + HLD 路径 + Guardrails 路径（如有）
+**输出**：Test Strategy 文档
+
+**示例**：
+```
+/test-strategy-writer ./docs/PRD-用户认证.md ./docs/API-Contract-用户认证.md ./docs/HLD-用户认证.md ./docs/Guardrails.md
+```
+
+---
+
+### test-strategy-reviewer
+
+**用途**：评审测试策略，确认风险覆盖、独立测试分层与门禁标准是否成立
+
+**特点**：
+- 四道门禁：基线与范围 → 风险覆盖与分层 → 环境/数据/依赖 → 门禁与自动化
+- 严格准出：P0=0, P1=0, P2≤2
+- 可作为 `test-spec-writer` 的正式基线
+
+**输入**：Test Strategy 路径 + PRD 路径 + API Contract 路径 + HLD 路径
+**输出**：审查报告 + 准出证书（通过时）
+
+**示例**：
+```
+/test-strategy-reviewer ./docs/Test-Strategy-用户认证.md ./docs/PRD-用户认证.md ./docs/API-Contract-用户认证.md ./docs/HLD-用户认证.md
+```
+
+---
+
 ### lld-writer
 
 **用途**：将 HLD 架构决策细化为可实现的低层设计文档
@@ -377,6 +468,67 @@ flowchart TD
 
 ---
 
+### test-spec-writer
+
+**用途**：基于批准的 Test Strategy 与 LLD，产出完整的测试规格与 test case package
+
+**特点**：
+- 输出完整 package，而非零散 case
+- 强制追溯：需求/接口/设计/风险 → 测试项
+- 细化主流程、分支、异常、边界、系统集成、回归与非功能验证
+- 输出覆盖率摘要：需求/风险/外部行为/场景/NFR 分项统计
+- 包含环境、数据、依赖与证据要求
+- 不展开开发内建测试层的详细 case
+
+**输入**：PRD 路径 + API Contract 路径 + HLD 路径 + LLD 路径 + Test Strategy 路径
+**输出**：Test Spec / Test Case Package
+
+**示例**：
+```
+/test-spec-writer ./docs/PRD-用户认证.md ./docs/API-Contract-用户认证.md ./docs/HLD-用户认证.md ./docs/LLD-用户认证.md ./docs/Test-Strategy-用户认证.md
+```
+
+---
+
+### test-reviewer
+
+**用途**：评审测试包，检查覆盖、追溯、执行证据与残余风险，作为发布准备前的测试门禁
+
+**特点**：
+- 四道门禁：基线与追溯 → 覆盖与漂移 → 可执行性 → 执行证据与残余风险
+- 支持设计准备评审与发布前测试门禁两种模式
+- 使用统一的测试设计覆盖率口径做门禁判断
+- 严格准出：P0=0, P1=0, P2≤2
+
+**输入**：Test Spec 路径 + Test Strategy 路径 + 执行摘要/缺陷清单（发布前模式建议提供）
+**输出**：审查报告 + 准出证书（通过时）
+
+**示例**：
+```
+/test-reviewer ./docs/Test-Spec-用户认证.md ./docs/Test-Strategy-用户认证.md ./docs/test-execution-summary.md
+```
+
+---
+
+### runbook-writer
+
+**用途**：基于 HLD、LLD、测试约束与交付方式，编写生产就绪的 Runbook
+
+**特点**：
+- 覆盖部署、回滚、监控、故障处理与值班手册
+- 双阶段审查：Spec compliance → Quality review
+- Context 隔离：Writer/Reviewer 使用隔离上下文
+
+**输入**：HLD 路径 + LLD 路径 + API Contract 路径 + Guardrails 路径（如有）
+**输出**：Runbook 文档
+
+**示例**：
+```
+/runbook-writer ./docs/HLD-用户认证.md ./docs/LLD-用户认证.md ./docs/API-Contract-用户认证.md ./docs/Guardrails.md
+```
+
+---
+
 ## 文档流转关系
 
 | 上游文档 | Skill | 下游文档 |
@@ -389,10 +541,15 @@ flowchart TD
 | PRD + API Contract | api-reviewer | API Contract（准出） |
 | PRD + API Contract | hld-writer | HLD |
 | HLD + PRD | hld-reviewer | HLD（准出） |
+| PRD + API Contract + HLD + Guardrails（如有） | test-strategy-writer | Test Strategy |
+| Test Strategy + PRD + API Contract + HLD | test-strategy-reviewer | Test Strategy（准出） |
 | 项目启动/变更 | guardrails-writer | Guardrails |
 | Guardrails | guardrails-reviewer | Guardrails（准出） |
 | PRD + HLD + Contract + Guardrails（如有） | lld-writer | LLD + Manifest |
 | LLD + PRD + HLD + Contract + Guardrails（如有） | lld-reviewer | LLD（准出） |
+| PRD + API Contract + HLD + LLD + Test Strategy | test-spec-writer | Test Spec / Test Case Package |
+| Test Spec + Test Strategy + 执行摘要（可选） | test-reviewer | 测试准出 |
+| HLD + LLD + API Contract + Guardrails（如有） | runbook-writer | Runbook |
 
 ---
 

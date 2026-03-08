@@ -27,6 +27,21 @@
 - [ ] 表格格式是否正确？
 - [ ] Mermaid 流程图是否可渲染？
 
+### Traceability Metadata（强制）
+
+- [ ] 是否先执行了 `python3 plugins/testany-eng/scripts/trace_lint.py --format json <PRD路径>`？
+- [ ] 是否读取并纳入了脚本返回的 `error / warning / info`？
+- [ ] 是否存在 `TRACEABILITY-METADATA:BEGIN/END` 标记？
+- [ ] 标记间是否只有一个 YAML fenced code block？
+- [ ] `schema.name` 是否等于 `testany-traceability`？
+- [ ] `schema.profile` 是否等于 `prd-profile-v1`？
+- [ ] `artifact.type` 是否等于 `PRD`？
+- [ ] 是否存在至少 1 条 `entities.requirements[]`？
+- [ ] 每条 requirement 是否都有稳定 `REQ-*`？
+- [ ] 每条 requirement 是否都有 `class/title/statement/priority/status/scope/acceptance_criteria`？
+- [ ] `artifact.source_documents` 是否声明了本轮实际使用的 BRD / Journey 来源？
+- [ ] `relations[].type=derived_from` 是否为关键 requirement 建立了来源追溯？
+
 ---
 
 ## 2. 业务逻辑（PM 视角）
@@ -158,6 +173,12 @@
 - [ ] 现状描述是否有文档/代码依据？
 - [ ] 依据是否标注了来源路径？
 
+### Traceability 引用
+
+- [ ] `source_refs` 中引用的 `artifact_id` 是否真实存在或可在 `artifact.source_documents` 中找到？
+- [ ] `relations.from/to` 是否都引用了已声明对象？
+- [ ] 是否存在 requirement 仅在正文出现、但没有进入 metadata block？
+
 ### 项目约定
 
 - [ ] 是否遵循项目现有的命名规范？
@@ -197,6 +218,7 @@
 | 内容边界 | | | | |
 | 证据可追溯性 | | | | |
 | 一致性 | | | | |
+| Traceability Metadata | | | | |
 | **总计** | | | | |
 
 ## 审查结论

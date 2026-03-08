@@ -13,7 +13,13 @@ argument-hint: <PRD 文件路径>
 
 $ARGUMENTS
 
-## 审查维度（8 大维度）
+启动后，reviewer 必须先执行：
+
+```bash
+python3 plugins/testany-eng/scripts/trace_lint.py --format json <PRD文件路径>
+```
+
+## 审查维度
 
 1. **结构完整性** - 必填章节是否完整
 2. **业务逻辑（PM 视角）** - 业务背景、用户故事、业务规则
@@ -23,6 +29,7 @@ $ARGUMENTS
 6. **内容边界** - 是否越界到 HLD 领域
 7. **证据可追溯性** - 相关能力识别是否有来源
 8. **一致性** - 术语、需求描述是否一致
+9. **Traceability Metadata** - `prd-profile-v1` 元数据是否完整、可解析、可追溯
 
 ## 问题分级
 
@@ -30,4 +37,4 @@ $ARGUMENTS
 - **P1 严重**：强烈建议修复，累计 ≥2 个不放行
 - **P2 建议**：可选优化，不阻塞放行
 
-请提供 PRD 文件路径开始审查。
+请提供 PRD 文件路径开始审查；reviewer 会同时检查正文内容和 `TRACEABILITY-METADATA` block。

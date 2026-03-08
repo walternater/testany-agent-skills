@@ -5,6 +5,45 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 新增
+
+- **testany-eng 测试闭环能力**：
+  - 新增 `test-strategy-writer`：基于 PRD/API/HLD 定义独立测试策略
+  - 新增 `test-strategy-reviewer`：审查测试策略的风险覆盖、测试分层、环境与门禁
+  - 新增 `test-spec-writer`：基于 Test Strategy + LLD 产出测试规格与 test case package
+  - 新增 `test-reviewer`：作为测试门禁，审查追溯、覆盖、执行证据与残余风险
+
+- **testany-eng traceability metadata v1**：
+  - 新增 canonical schema 设计稿
+  - 新增 `prd-profile-v1`、`test-strategy-profile-v1`、`test-spec-profile-v1` 示例
+  - 新增 `trace-lint` 输入输出契约文档
+  - 新增 `trace-build-rtm` 输入输出契约文档
+
+- **testany-eng 脚本工具**：
+  - 新增 `plugins/testany-eng/scripts/trace_lint.py`
+  - 新增 `plugins/testany-eng/scripts/trace_build_rtm.py`
+  - 新增对应 CLI 测试，覆盖 PRD / Test Strategy / Test Spec profile 校验与 RTM 聚合
+
+### 变更
+
+- **PRD → Test Strategy → Test Spec 追溯闭环落地**：
+  - `prd-writer` / `prd-reviewer` 继续使用 `prd-profile-v1`
+  - `test-strategy-writer` / `test-strategy-reviewer` 接入 `test-strategy-profile-v1`
+  - `test-spec-writer` / `test-reviewer` 接入 `test-spec-profile-v1`
+  - reviewer 明确要求先执行 `trace-lint` / `trace-build-rtm`，不再只依赖人工等价检查
+
+- **testany-bot 命名收敛**：
+  - 测试触发 skill 统一命名为 `testany-trigger`
+  - 命令入口统一为 `/testany-bot:trigger`
+  - plugin README、根 README、marketplace 与跨 skill 引用同步更新
+
+- **testany-eng 文档与命令入口更新**：
+  - plugin README 补充测试阶段工作流、traceability 约定与脚本使用方式
+  - 根 README 更新 `testany-eng` 的测试相关命令说明
+  - 新增 4 个测试 skill 的 command 文档、review checklist、report template
+
 ## [2.6.1] - 2026-02-01
 
 ### 移除
@@ -61,7 +100,7 @@
 - **testany-bot**：Testany 测试平台智能助手（通用版）v2.0.0
   - 跨平台兼容：VS Code Copilot、GitHub Copilot 等 AI 平台
   - 自包含 Skills 架构：每个技能内嵌完整知识，无需外部依赖
-  - 6 个核心技能：case、pipeline、tests、debug、orchestrator、workspace
+  - 6 个核心技能：case、pipeline、tests、debug、trigger、workspace
   - 遵循 [Agent Skills 公共规范](https://agentskills.io)，仅使用 `name` 和 `description` 字段
   - 完整 README 文档（含 Mermaid 架构图）
 

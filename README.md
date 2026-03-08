@@ -13,10 +13,10 @@ Skills 是包含指令、脚本和资源的文件夹，Claude 可以动态加载
 
 | Plugin | 领域 | 命令 |
 |--------|------|------|
-| **testany-eng** | 研发流程 | `/testany-eng:brd-interviewer`, `/testany-eng:uc-interviewer`, `/testany-eng:prd-writer`, `/testany-eng:prd-reviewer`, `/testany-eng:prd-studio`, `/testany-eng:api-writer`, `/testany-eng:api-reviewer`, `/testany-eng:guardrails-writer`, `/testany-eng:guardrails-reviewer`, `/testany-eng:hld-writer`, `/testany-eng:hld-reviewer`, `/testany-eng:runbook-writer` |
+| **testany-eng** | 研发流程 | `/testany-eng:brd-interviewer`, `/testany-eng:uc-interviewer`, `/testany-eng:prd-writer`, `/testany-eng:prd-reviewer`, `/testany-eng:prd-studio`, `/testany-eng:api-writer`, `/testany-eng:api-reviewer`, `/testany-eng:guardrails-writer`, `/testany-eng:guardrails-reviewer`, `/testany-eng:hld-writer`, `/testany-eng:hld-reviewer`, `/testany-eng:test-strategy-writer`, `/testany-eng:test-strategy-reviewer`, `/testany-eng:lld-writer`, `/testany-eng:lld-reviewer`, `/testany-eng:test-spec-writer`, `/testany-eng:test-reviewer`, `/testany-eng:runbook-writer` |
 | **testany-llm** | AI/LLM 工具 | `/testany-llm:skill-creator`, `/testany-llm:prompt-optimizer` |
 | **testany-mrkt** | 营销内容 | `/testany-mrkt:media-writer` |
-| **testany-bot** | 测试平台（通用版，按宿主能力适配） | `/testany-bot:case`, `/testany-bot:case-writing`, `/testany-bot:pipeline`, `/testany-bot:tests`, `/testany-bot:debug`, `/testany-bot:orchestrator`, `/testany-bot:workspace` |
+| **testany-bot** | 测试平台（通用版，按宿主能力适配） | `/testany-bot:case`, `/testany-bot:case-writing`, `/testany-bot:pipeline`, `/testany-bot:tests`, `/testany-bot:debug`, `/testany-bot:trigger`, `/testany-bot:workspace` |
 
 # 仓库结构
 
@@ -50,7 +50,7 @@ testany-agent-skills/
 1. 选择 `Browse and install plugins`
 2. 选择 `testany-agent-skills`
 3. 选择需要的 plugin：
-   - `testany-eng` - 研发流程（BRD/PRD/HLD）
+   - `testany-eng` - 研发流程（BRD/PRD/API/HLD/LLD/Test/Runbook）
    - `testany-llm` - AI 工具（Skill/Prompt）
    - `testany-mrkt` - 营销内容（自媒体）
    - `testany-bot` - 测试平台（通用版，按宿主能力适配）
@@ -91,6 +91,12 @@ testany-agent-skills/
 | `/testany-eng:guardrails-reviewer` | 工程规范审查门禁，检查覆盖性与可执行性 |
 | `/testany-eng:hld-writer` | HLD 写作技能，基于 PRD + API Contract 做技术决策 |
 | `/testany-eng:hld-reviewer` | HLD 审查专家，模拟 Design Review 会议，重点检测 PRD→HLD 漂移 |
+| `/testany-eng:test-strategy-writer` | 测试策略写作助手，基于 PRD/API/HLD 定义测试方法、分层、环境与门禁 |
+| `/testany-eng:test-strategy-reviewer` | 测试策略评审门禁，检查风险覆盖、分层、环境和入口/出口标准 |
+| `/testany-eng:lld-writer` | LLD 写作技能，将 HLD 和 Contract 细化为可实现的详细设计 |
+| `/testany-eng:lld-reviewer` | LLD 审查门禁，检查 HLD→LLD 漂移、完整性与实现风险 |
+| `/testany-eng:test-spec-writer` | 测试规格与测试用例包写作助手，输出完整 test case package |
+| `/testany-eng:test-reviewer` | 测试评审门禁，检查测试包覆盖、证据与残余风险 |
 | `/testany-eng:runbook-writer` | 运维手册（Runbook）编写协调器，基于 HLD/LLD 产出生产就绪的运维手册 |
 
 ## testany-llm（AI/LLM 工具）
@@ -117,7 +123,7 @@ testany-agent-skills/
 | `/testany-bot:pipeline` | 流水线编排 - 创建 Pipeline，配置依赖和 Relay |
 | `/testany-bot:tests` | 测试执行 - 触发 Pipeline 执行，监控状态 |
 | `/testany-bot:debug` | 故障诊断 - 分析失败原因，查看日志 |
-| `/testany-bot:orchestrator` | 测试编排 - 创建门禁、定时计划，提供集成代码 |
+| `/testany-bot:trigger` | 测试触发 - 创建门禁、定时计划，提供集成代码 |
 | `/testany-bot:workspace` | 工作空间管理 - 成员管理、权限配置 |
 
 # 创建自定义 Skill

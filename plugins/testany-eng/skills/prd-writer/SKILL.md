@@ -15,6 +15,7 @@ description: 'Write PRD, 写产品需求文档。Use when: 需要写新功能 PR
 4. **关键问题必须确认，非关键问题直接给建议**：减少不必要的交互，提高效率
 5. **强制使用 AskUserQuestion 工具提问**：不要在普通文本中提问，必须使用工具
 6. **审查阶段必须执行**：完成初稿后必须进行强制审查
+7. **PRD 必须携带可脚本处理的追溯元数据**：输出中必须包含符合 `prd-profile-v1` 的 `TRACEABILITY-METADATA` block
 
 ## PRD 内容边界（强制遵守）
 
@@ -83,6 +84,28 @@ description: 'Write PRD, 写产品需求文档。Use when: 需要写新功能 PR
 3. **第三方集成** - 接入外部服务
 4. **功能重构** - 不改变外部功能的内部重构
 5. **性能/安全优化** - 非功能性改进
+
+## Traceability Metadata（强制）
+
+产出的 PRD 必须内嵌 traceability metadata block，并遵循以下参考：
+
+- `../../references/traceability-schema/traceability-schema-v1.md`
+- `../../references/traceability-schema/prd-profile-v1.example.yaml`
+- `../../references/traceability-schema/trace-lint-contract-v1.md`
+
+当前 rollout 已启用 `prd-profile-v1`、`test-strategy-profile-v1`、`test-spec-profile-v1`；在 PRD 阶段 writer 至少要做到：
+
+- `artifact.type` 固定为 `PRD`
+- 产出稳定的 `REQ-*`，且每条 requirement 都包含：
+  - `class`
+  - `title`
+  - `statement`
+  - `priority`
+  - `status`
+  - `scope`
+  - `acceptance_criteria`
+- 将 BRD / User Journey 等上游输入写入 `artifact.source_documents`
+- 对来自上游文档的关键需求，尽量用 `relations[].type=derived_from` 建立追溯关系
 
 ## 工作流程
 
@@ -467,6 +490,7 @@ User Journey 文档是 BRD→PRD 之间的**对齐检查点**：
 2. 使用 Mermaid 绘制必要的流程图
 3. 确保所有必填章节完整
 4. **遵循阶段零收集的项目约定**
+5. **生成并填充 `TRACEABILITY-METADATA` block**
 
 **撰写规范**：
 - 默认使用中文撰写（技术术语可保留英文），用户要求英文时可切换
@@ -515,6 +539,15 @@ User Journey 文档是 BRD→PRD 之间的**对齐检查点**：
 #### 4.6 问题汇总
 如发现问题，使用 AskUserQuestion 工具一次性确认所有问题。
 
+#### 4.7 Traceability Metadata 检查（强制）
+- [ ] 是否包含 `TRACEABILITY-METADATA` block？（必须）
+- [ ] `schema.profile` 是否为 `prd-profile-v1`？（必须）
+- [ ] `artifact.type` 是否为 `PRD`？（必须）
+- [ ] `entities.requirements[]` 是否存在且每条 requirement 都有稳定 `REQ-*`？（必须）
+- [ ] 每条 requirement 是否都包含可测试的 `acceptance_criteria`？（必须）
+- [ ] `artifact.source_documents` 是否覆盖本轮使用的 BRD / Journey 来源？（应该）
+- [ ] `relations[].derived_from` 是否覆盖关键 requirement 的来源关系？（应该）
+
 ## 交互规范
 
 ### 必须使用 AskUserQuestion 的场景
@@ -562,6 +595,7 @@ User Journey 文档是 BRD→PRD 之间的**对齐检查点**：
 4. 表格和流程图格式正确
 5. 遵循选定模板的结构
 6. **不包含 HLD 级别的技术细节**
+7. **包含符合 `prd-profile-v1` 的 `TRACEABILITY-METADATA` block**
 
 ## 质量标准
 

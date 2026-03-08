@@ -15,6 +15,34 @@
 > **创建日期**: YYYY-MM-DD
 > **最后更新**: YYYY-MM-DD
 
+<!-- TRACEABILITY-METADATA:BEGIN -->
+```yaml
+schema:
+  name: testany-traceability
+  version: "1.0.0"
+  profile: prd-profile-v1
+artifact:
+  id: PRD-[DOMAIN]-001
+  type: PRD
+  title: [重构名称]
+  status: draft
+  owners: []
+  created_at: YYYY-MM-DD
+  updated_at: YYYY-MM-DD
+  source_documents: []
+entities:
+  requirements: []
+  risks: []
+  must_not_regress: []
+  external_behaviors: []
+  decisions: []
+  flows: []
+  test_cases: []
+relations: []
+waivers: []
+```
+<!-- TRACEABILITY-METADATA:END -->
+
 ---
 
 ## 1. 文档信息

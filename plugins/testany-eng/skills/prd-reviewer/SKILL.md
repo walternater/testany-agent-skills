@@ -14,8 +14,9 @@ description: 'PRD review, 需求评审, 检查 PRD 质量。Use when: PRD 完成
 3. **迭代直到放行**：发现阻塞问题就不放行，直到所有问题解决才颁发"准出证书"
 4. **基于证据挑战**：质疑需有依据，指出具体问题和改进建议，不是为了挑刺而挑刺
 5. **360 度多角色审查**：从 PM、开发、测试、业务方等多个角色视角审查
+6. **强制校验追溯元数据**：PRD 必须包含符合 `prd-profile-v1` 的 `TRACEABILITY-METADATA` block；缺失或结构不合法视为 P0
 
-## 审查维度（8 大维度）
+## 审查维度
 
 ### 1. 结构完整性
 - 是否包含所有必填章节？
@@ -59,7 +60,12 @@ description: 'PRD review, 需求评审, 检查 PRD 质量。Use when: PRD 完成
 - 需求描述是否有内部矛盾？
 - 优先级标注是否合理？
 
-### 9. 1:N 拆分场景审查（当 PRD 属于 BRD 拆分场景时）
+### 9. Traceability Metadata
+- 是否存在 `TRACEABILITY-METADATA` block？
+- 是否满足 `prd-profile-v1`？
+- requirement、source document、derived_from 关系是否完整？
+
+### 10. 1:N 拆分场景审查（当 PRD 属于 BRD 拆分场景时）
 
 **检测方式**：检查 PRD 元信息是否包含「索引文档」或「关联 PRD」字段
 
@@ -95,6 +101,9 @@ description: 'PRD review, 需求评审, 检查 PRD 质量。Use when: PRD 完成
 - 越界到 HLD 领域（包含 API 路径、数据库表结构等）
 - 关键业务规则缺失
 - 「相关能力识别」无来源依据
+- 缺少 `TRACEABILITY-METADATA` block，或 block 无法解析
+- `schema.profile` 不是 `prd-profile-v1`
+- requirement 缺少稳定 `REQ-*` 或缺少 `acceptance_criteria`
 - **[1:N 场景]** 索引文档不存在
 - **[1:N 场景]** BRD 需求覆盖率 < 100%（存在未分配需求）
 
@@ -121,10 +130,28 @@ description: 'PRD review, 需求评审, 检查 PRD 质量。Use when: PRD 完成
 1. **读取 PRD 文档**
    - 确认 PRD 文件路径
    - 完整读取 PRD 内容
+   - traceability metadata 校验必须直接执行脚本，不再只做人工等价检查
+   - 执行命令：
+     - `python3 plugins/testany-eng/scripts/trace_lint.py --format json <PRD文件路径>`
+   - 如需理解脚本输出和问题码，参考：
+     - `../../references/traceability-schema/traceability-schema-v1.md`
+     - `../../references/traceability-schema/trace-lint-contract-v1.md`
 
 2. **收集上下文**（如需要）
    - 读取项目相关文档验证 PRD 中的业务现状描述
    - 检查「相关能力识别」中的来源是否存在
+   - 读取 `trace-lint` 的 JSON 输出，检查 `TRACEABILITY-METADATA` block 是否存在、可解析，并满足 `prd-profile-v1`
+
+3. **处理 trace-lint 结果**（强制）
+   - 如果 `trace-lint` 返回 `error`：
+     - 直接记为 `P0`
+     - 对应问题必须进入审查报告
+   - 如果 `trace-lint` 返回 `warning`：
+     - 默认记为 `P1`
+     - 除非 reviewer 有明确证据证明它不影响本轮准出
+   - 如果 `trace-lint` 返回 `info`：
+     - 作为补充说明纳入审查备注，无需单独升级
+   - Reviewer 不得跳过脚本，也不得在未运行脚本的情况下声称 metadata 已通过
 
 ### 阶段一：全面审查
 
@@ -138,6 +165,7 @@ description: 'PRD review, 需求评审, 检查 PRD 质量。Use when: PRD 完成
 6. 内容边界审查
 7. 证据可追溯性审查
 8. 一致性审查
+9. Traceability Metadata 审查
 
 ### 阶段二：问题汇总与分级
 
@@ -202,6 +230,7 @@ description: 'PRD review, 需求评审, 检查 PRD 质量。Use when: PRD 完成
 | 内容边界 | ⭐⭐⭐⭐⭐ | [说明] |
 | 证据可追溯性 | ⭐⭐⭐☆☆ | [说明] |
 | 一致性 | ⭐⭐⭐⭐☆ | [说明] |
+| Traceability Metadata | ⭐⭐⭐⭐☆ | [说明] |
 
 ---
 
