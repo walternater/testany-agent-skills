@@ -9,7 +9,7 @@
 | `traditional test scenario` | 传统测试语义中的一个完整测试场景或业务验证目标 | `test-spec`、用户输入、测试设计文档 | 描述“要验证什么” |
 | `Testany platform case` | Testany 平台上的可复用原子自动化步骤包，包含 metadata、脚本代码和 ZIP | `testany-case-writing` | 描述“某一步怎么自动化执行” |
 | `pipeline` | Testany 平台的执行与编排单元，负责组织一个或多个 platform cases 的顺序、条件、relay 和预期结果 | `testany-pipeline` | 描述“这些 steps 怎样一起运行” |
-| `trigger` | Testany 平台的执行入口。当前包括 `Plan`、`Manual Trigger`、`Gatekeeper` | `testany-trigger` | 描述“什么时候、通过什么方式运行 pipeline” |
+| `trigger` | Testany 平台的执行入口。当前包括 `Plan`、`Manual Trigger`、`Gatekeeper`，以及 ad-hoc run now | `testany-trigger` | 描述“怎么发起 pipeline execution” |
 
 ## 一句话边界
 
@@ -17,6 +17,7 @@
 - Testany `case` 是**可复用的原子自动化步骤包**，不是传统语义下的完整测试场景。
 - `pipeline` 才是 Testany 的**执行与编排单元**。即使只有一个 platform case，要真正执行也仍然需要一条 pipeline。
 - `trigger` 是**执行入口**，不是编排层。它只决定“如何触发 pipeline”，不决定 pipeline 内部逻辑。
+- execution 发起之后的观测、查询、刷新、取消与失败交接，属于 `testany-execution`。
 
 ## 为什么不能直接把传统 Test Case 映射成 Testany Case
 
@@ -50,6 +51,10 @@ test-spec / 用户需求
      - 根据 decomposition 和 case keys 组装 pipeline
   -> testany-trigger
      - 为 pipeline 配置 Plan / Manual Trigger / Gatekeeper
+     - 或立即执行一次
+  -> testany-execution
+     - 查看进度、查历史、刷新状态、取消未开始执行
+     - 失败时交给 testany-debug
 ```
 
 ## 场景拆解经验法则
@@ -67,8 +72,9 @@ test-spec / 用户需求
 - 不需要条件分支或跨 case 依赖
 - 单一 executor 即可稳定表达
 
-## 与 3 个核心 skill 的直接关系
+## 与 4 个核心 skill 的直接关系
 
 - `testany-case-writing` 必须先决定“场景要拆成几个 platform cases”，再写脚本和 ZIP。
 - `testany-pipeline` 的主路径应消费上游的 decomposition 结果，而不是主要依赖猜测 case 描述。
-- `testany-trigger` 必须覆盖三种 trigger：`Plan`、`Manual Trigger`、`Gatekeeper`，并明确它们都作用于 pipeline。
+- `testany-trigger` 必须同时覆盖 persistent trigger（`Plan`、`Manual Trigger`、`Gatekeeper`）和 ad-hoc run now。
+- `testany-execution` 应负责 execution 发起之后的观测与管理，而不是再次承担 trigger 职责。

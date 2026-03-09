@@ -16,7 +16,7 @@ Skills 是包含指令、脚本和资源的文件夹，Claude 可以动态加载
 | **testany-eng** | 研发流程 | `/testany-eng:brd-interviewer`, `/testany-eng:uc-interviewer`, `/testany-eng:prd-writer`, `/testany-eng:prd-reviewer`, `/testany-eng:prd-studio`, `/testany-eng:api-writer`, `/testany-eng:api-reviewer`, `/testany-eng:guardrails-writer`, `/testany-eng:guardrails-reviewer`, `/testany-eng:hld-writer`, `/testany-eng:hld-reviewer`, `/testany-eng:test-strategy-writer`, `/testany-eng:test-strategy-reviewer`, `/testany-eng:lld-writer`, `/testany-eng:lld-reviewer`, `/testany-eng:test-spec-writer`, `/testany-eng:test-reviewer`, `/testany-eng:runbook-writer` |
 | **testany-llm** | AI/LLM 工具 | `/testany-llm:skill-creator`, `/testany-llm:prompt-optimizer` |
 | **testany-mrkt** | 营销内容 | `/testany-mrkt:media-writer` |
-| **testany-bot** | 测试平台（通用版，按宿主能力适配） | `/testany-bot:case`, `/testany-bot:case-writing`, `/testany-bot:pipeline`, `/testany-bot:tests`, `/testany-bot:debug`, `/testany-bot:trigger`, `/testany-bot:workspace` |
+| **testany-bot** | 测试平台（通用版，按宿主能力适配） | `/testany-bot:case`, `/testany-bot:case-writing`, `/testany-bot:pipeline`, `/testany-bot:execution`, `/testany-bot:debug`, `/testany-bot:trigger`, `/testany-bot:workspace` |
 
 # 仓库结构
 
@@ -121,9 +121,9 @@ testany-agent-skills/
 | `/testany-bot:case` | Platform Case 注册与管理 - 注册 case package、更新 metadata、上传脚本、管理生命周期 |
 | `/testany-bot:case-writing` | Platform Case 编写 - 将传统测试场景拆解为 Testany platform cases，并生成可注册 case packages |
 | `/testany-bot:pipeline` | 流水线编排 - 基于 decomposition 或 case keys 创建 Pipeline，配置依赖、Relay 和分支 |
-| `/testany-bot:tests` | 测试执行 - 触发 Pipeline 执行，监控状态 |
+| `/testany-bot:execution` | Execution 管理 - 查看进度、查历史、刷新状态、取消未开始执行 |
 | `/testany-bot:debug` | 故障诊断 - 分析失败原因，查看日志 |
-| `/testany-bot:trigger` | 测试触发 - 为 Pipeline 配置 Plan、Manual Trigger、Gatekeeper |
+| `/testany-bot:trigger` | 测试触发 - 为 Pipeline 配置 Plan、Manual Trigger、Gatekeeper，或立即执行一次 |
 | `/testany-bot:workspace` | 工作空间管理 - 成员管理、权限配置 |
 
 # 创建自定义 Skill

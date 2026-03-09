@@ -30,7 +30,7 @@ testany-bot/
 │   ├── case.md
 │   ├── case-writing.md
 │   ├── pipeline.md
-│   ├── tests.md
+│   ├── execution.md
 │   ├── debug.md
 │   ├── trigger.md
 │   └── workspace.md
@@ -44,7 +44,7 @@ testany-bot/
     ├── testany-case/SKILL.md
     ├── testany-case-writing/SKILL.md
     ├── testany-pipeline/SKILL.md
-    ├── testany-tests/SKILL.md
+    ├── testany-execution/SKILL.md
     ├── testany-debug/SKILL.md
     ├── testany-trigger/SKILL.md
     └── testany-workspace/SKILL.md
@@ -57,9 +57,9 @@ testany-bot/
 | **testany-case** | Platform Case 注册与管理 | 注册 case package、更新 metadata、上传脚本、管理生命周期 |
 | **testany-case-writing** | Platform Case 编写 | 将传统测试场景拆解为 Testany platform cases，并生成可注册 case packages |
 | **testany-pipeline** | 流水线编排 | 基于 decomposition 或 case keys 创建 Pipeline，配置依赖、Relay 和分支 |
-| **testany-tests** | 测试执行 | 触发 Pipeline 执行，监控状态 |
+| **testany-execution** | Execution 管理 | 查看进度、查历史、刷新状态、取消未开始执行 |
 | **testany-debug** | 故障诊断 | 分析失败原因，查看日志 |
-| **testany-trigger** | 测试触发 | 为 Pipeline 配置 Plan、Manual Trigger、Gatekeeper |
+| **testany-trigger** | 测试触发 | 为 Pipeline 配置 Plan、Manual Trigger、Gatekeeper，或立即执行一次 |
 | **testany-workspace** | 工作空间管理 | 成员管理、权限配置 |
 | **testany-guide** | 参考知识 | 核心概念、Executor 配置、YAML 语法 |
 
@@ -68,10 +68,11 @@ testany-bot/
 ### 命令触发（宿主支持 slash command 时）
 
 ```
- /case 把这些 ZIP 和 metadata 注册成 Testany cases
+/case 把这些 ZIP 和 metadata 注册成 Testany cases
 /case-writing 把登录场景拆成可上传到 Testany 的 cases
 /pipeline 根据 decomposition 把登录和查询 cases 组成流水线
-/tests Y2K-0601
+/trigger 立即执行 Y2K-0601
+/execution 查看 Y2K-0601-0000B
 /debug Y2K-0601-00001
 /trigger 创建手动触发或 Gatekeeper
 /workspace 添加成员
@@ -81,7 +82,8 @@ testany-bot/
 
 ```
 帮我把这些自动化脚本注册成 Testany cases
-执行回归测试流水线
+现在立刻执行一次回归测试流水线
+看看刚才那次 execution 跑到哪了
 这个测试为什么失败了？
 ```
 

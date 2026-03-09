@@ -42,6 +42,10 @@
 - `execution_id`: 格式为 `{pipeline_key}-{5位大写十六进制}`（如 `Y2K-0601-0000A`）
 - `status`: NOT_STARTED(-1), RUNNING(0), SUCCESS(1), FAILURE(2), SKIPPED(3), FAIL_AS_EXPECTED(4), CANCELLED(5), ERROR(99)
 
+**说明**：
+- execution 是 trigger 发起之后生成的运行实例
+- execution 的观测、刷新、取消、历史查询属于 `testany-execution`
+
 ### Plan（定时计划）
 
 **定义**：自动化调度的执行计划
@@ -62,6 +66,10 @@
 - 关联一个或多个 pipeline
 - 支持按需发起执行，不依赖定时调度或外部 webhook
 - Owner 与实际执行人是两个不同概念
+
+**说明**：
+- Manual Trigger 是持久化 trigger 资源
+- 它不等于“现在立刻执行一次”的 ad-hoc run
 
 ### Gatekeeper（Webhook 触发器）
 

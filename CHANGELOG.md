@@ -36,7 +36,8 @@
   - `testany-case-writing` 改为先做场景拆解，再产出可注册的 platform case packages
   - `testany-case` 改为 platform case registration & CRUD，主路径优先消费上游 package / metadata / decomposition
   - `testany-pipeline` 改为优先消费上游 `automation design / decomposition`，保留从现有 cases 反推的 fallback 但降级为兜底
-  - `testany-trigger` 正式纳入 `Plan / Manual Trigger / Gatekeeper` 三类执行入口，并明确 trigger 不是编排层
+  - `testany-trigger` 改为同时负责 persistent trigger（`Plan / Manual Trigger / Gatekeeper`）和 ad-hoc run now
+  - `testany-tests` 重命名为 `testany-execution`，聚焦 execution 观测、历史查询、刷新、取消与失败交接
 
 - **PRD → Test Strategy → Test Spec 追溯闭环落地**：
   - `prd-writer` / `prd-reviewer` 继续使用 `prd-profile-v1`
