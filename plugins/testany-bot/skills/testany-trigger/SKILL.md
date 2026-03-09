@@ -60,7 +60,7 @@ description: Testany 执行入口与单次触发 - 为 pipeline 配置 Plan、Ma
 | 类型 | 平台能力 | 当前 MCP 支持 | 本 skill 的处理方式 |
 |------|---------|--------------|--------------------|
 | Plan | 完整 | 有 | 直接通过 MCP CRUD |
-| Gatekeeper | 完整 | 有，但 pipeline 绑定可能仍需 UI fallback | 直接通过 MCP CRUD，必要时补 UI fallback |
+| Gatekeeper | 完整 | 有（含 pipeline 绑定与 webhook URL） | 直接通过 MCP 完成全流程 |
 | Manual Trigger | 平台已支持 | 当前未看到对应 MCP tools | 明确纳入 trigger 体系；若当前宿主/MCP 无工具，则指导用户走 UI fallback |
 | Run Now | 完整 | 有 (`testany_execute_pipeline`) | 直接执行一次并返回 `execution_key` |
 
@@ -74,7 +74,9 @@ description: Testany 执行入口与单次触发 - 为 pipeline 配置 Plan、Ma
 |---------|---------|---------|
 | 列出 Gatekeepers | Read | `testany_list_gatekeepers` |
 | 查看 Gatekeeper 详情 | Read | `testany_get_gatekeeper` |
-| 创建 Gatekeeper | Create | `testany_create_gatekeeper` |
+| 创建 Gatekeeper | Create | `testany_create_gatekeeper`（可同时绑定 pipelines） |
+| 查看 Gatekeeper 绑定的 Pipelines | Read | `testany_get_gatekeeper_pipelines` |
+| 绑定/替换 Gatekeeper 的 Pipelines | Update | `testany_bind_gatekeeper_pipelines` |
 | 更新 Gatekeeper 字段 | Update | `testany_update_gatekeeper` |
 | 删除 Gatekeeper | Delete | `testany_delete_gatekeeper` |
 | 列出 Plans | Read | `testany_list_plans` |
@@ -199,18 +201,21 @@ Gatekeeper 通过 Webhook 触发一个 pipeline group 的执行。
 
 ### 创建流程
 
+**方式一：创建时直接绑定（推荐）**
 1. `testany_get_my_workspaces` → 选择 workspace
 2. `testany_list_pipelines` → 选择要触发的 pipelines
-3. `testany_create_gatekeeper` → 创建 Gatekeeper
-4. 绑定 pipelines 到 Gatekeeper
-   - 优先使用 MCP 的 pipeline-group 绑定工具（如果已提供）
-   - 如果 MCP 暂不支持绑定：提示用户去 UI 绑定
+3. `testany_create_gatekeeper(workspace, name, pipelines=[...])` → 创建并绑定
+4. `testany_get_gatekeeper` → 获取 `hook_url`
 5. `testany_update_gatekeeper` → 配置 trigger_method / trigger_name / trigger_condition / watchers / owned_by
+
+**方式二：先创建，再绑定**
+1. `testany_create_gatekeeper` → 创建 Gatekeeper
+2. `testany_bind_gatekeeper_pipelines` → 绑定 pipelines
+3. `testany_get_gatekeeper_pipelines` → 确认绑定结果
 
 ### Webhook URL 获取
 
-如果 MCP 返回了 `hook_url`，直接使用。  
-如果当前返回为空或仅有局部信息，则提示用户从 UI 复制完整 Webhook URL。
+通过 `testany_get_gatekeeper` 获取详情即可拿到 `hook_url`。如果用户无编辑权限，`hook_url` 会是 null。
 
 ---
 
@@ -247,13 +252,13 @@ stage('Quality Gate') {
 任务完成后，向用户汇报：
 - Trigger 类型：`Plan / Manual Trigger / Gatekeeper / Run Now`
 - 目标 pipelines 列表
-- MCP 直连还是 UI fallback
+- MCP 直连完成
 - 关键配置（schedule_expr、timezone、watchers、trigger_name 等）
 - 如是 Run Now：
   - 返回 `execution_key`
   - 明确下一步去 `testany-execution`
 - 如是 Gatekeeper：
-  - 返回 Webhook URL（如可获取）
+  - 返回 Webhook URL（通过 testany_get_gatekeeper 获取；无权限时为 null）
 
 ---
 
