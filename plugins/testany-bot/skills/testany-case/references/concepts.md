@@ -2,21 +2,21 @@
 
 ## 实体定义
 
-### Case（测试用例）
+### Case（平台用例）
 
-**定义**：可复用的测试脚本单元
+**定义**：可复用的原子自动化步骤包，不等同于传统语义下的完整测试场景
 
 **属性**：
 - `case_key`: 8 位大写十六进制标识符（如 `A1B2C3D4`）
 - `name`: 用例名称
 - `runtime_uuid`: 执行环境 UUID（推荐 cloudprime）
-- `case_meta`: 执行配置（trigger_method, environment_variables）
+- `case_meta`: case 级运行配置；后端字段名仍为 `trigger_method`，包含 executor/path/command、environment_variables
 - `is_private`: 可见性控制
 - `workspace_keys`: 私有 case 可见的工作空间列表
 
 ### Pipeline（流水线）
 
-**定义**：编排多个 case 的执行单元
+**定义**：编排一个或多个 case 的执行与编排单元
 
 **属性**：
 - `pipeline_key`: 格式为 `{WS_KEY}-{4-5位大写十六进制}`（如 `Y2K-0601`、`Y2K-0001A`）
@@ -42,14 +42,23 @@
 - Cron 表达式定义执行周期
 - 可启用/禁用
 
-### Gatekeeper（质量门禁）
+### Manual Trigger（手动触发）
 
-**定义**：CI/CD 集成的质量控制点
+**定义**：按需人工发起 pipeline 执行的触发模板
 
 **属性**：
-- 关联 pipeline
-- 通过率阈值（100% = 全部通过才放行）
-- Webhook URL 接收结果
+- 关联一条或多条 pipeline
+- 可随时点击执行
+- 每次触发都会生成一条可追踪的 Trigger Instance
+
+### Gatekeeper（门卫）
+
+**定义**：由外部事件驱动的 pipeline 执行入口
+
+**属性**：
+- 关联 pipeline 或 pipeline group
+- 对外提供 webhook 入口
+- 适合 CI/CD、告警、外部系统联动触发
 
 ### Workspace（工作空间）
 
@@ -100,6 +109,14 @@
 | FAIL_AS_EXPECTED | 4 | 预期失败（仅 Case） | 是 |
 | CANCELLED | 5 | 已取消 | 是 |
 | ERROR | 99 | 系统错误 | 是 |
+
+---
+
+## 执行边界
+
+- 平台不支持直接执行单条 case
+- 真正的执行对象始终是 pipeline
+- Plan / Manual Trigger / Gatekeeper 都作用于 pipeline，而不是 case
 
 ---
 

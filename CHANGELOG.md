@@ -28,6 +28,16 @@
 
 ### 变更
 
+- **testany-bot 自动化对象模型收敛**：
+  - 新增 `automation-model.md`，统一 `traditional test scenario`、`platform case`、`pipeline`、`trigger` 四个对象的边界
+  - `testany-guide` / `concepts` 同步补充 Manual Trigger 与 pipeline-only execution 模型
+
+- **testany-bot skill 职责重构**：
+  - `testany-case-writing` 改为先做场景拆解，再产出可注册的 platform case packages
+  - `testany-case` 改为 platform case registration & CRUD，主路径优先消费上游 package / metadata / decomposition
+  - `testany-pipeline` 改为优先消费上游 `automation design / decomposition`，保留从现有 cases 反推的 fallback 但降级为兜底
+  - `testany-trigger` 正式纳入 `Plan / Manual Trigger / Gatekeeper` 三类执行入口，并明确 trigger 不是编排层
+
 - **PRD → Test Strategy → Test Spec 追溯闭环落地**：
   - `prd-writer` / `prd-reviewer` 继续使用 `prd-profile-v1`
   - `test-strategy-writer` / `test-strategy-reviewer` 接入 `test-strategy-profile-v1`
@@ -43,6 +53,9 @@
   - plugin README 补充测试阶段工作流、traceability 约定与脚本使用方式
   - 根 README 更新 `testany-eng` 的测试相关命令说明
   - 新增 4 个测试 skill 的 command 文档、review checklist、report template
+
+- **testany-bot 文档入口更新**：
+  - `commands`、plugin README、根 README、marketplace、`plugin.json` 同步更新为新的 automation model 和 skill 边界
 
 ## [2.6.1] - 2026-02-01
 

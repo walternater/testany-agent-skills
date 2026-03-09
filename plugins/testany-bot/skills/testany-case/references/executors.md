@@ -1,5 +1,7 @@
 # Executor 配置详解
 
+`case_meta` 的后端字段名仍为 `trigger_method`。这里的 `trigger` 指的是 **case 级运行入口配置**，也就是 executor 对应的 path/command；它不等于 `Plan / Manual Trigger / Gatekeeper` 这类 pipeline trigger。
+
 ## Executor 选择规则
 
 根据脚本语言/框架自动选择 executor：

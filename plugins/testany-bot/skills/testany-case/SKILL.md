@@ -1,15 +1,18 @@
 ---
 name: testany-case
-description: Testany 测试用例 CRUD - 创建/查询/更新/删除单个或批量 case（编写脚本请转到 testany-case-writing workflow）
-argument-hint: "[操作] [描述]，如：创建 case、查看 A1B2C3D4、删除我的所有 case"
+description: Testany platform case 注册与 CRUD - 将已准备好的 platform case package 注册到平台，并管理 metadata、脚本与生命周期
+argument-hint: "[操作] [描述]，如：注册这些 case packages、查看 A1B2C3D4、更新脚本、删除一个 case"
 ---
 
-# Testany Case CRUD
+# Testany Platform Case Registration & CRUD
 
-本 skill 通过 Testany MCP 工具管理 **Testany 平台上的测试用例**。
+本 skill 通过 Testany MCP 工具管理 **Testany 平台上的 platform cases**。
 所有操作都是对 Testany 平台的远程 API 调用，不涉及本地文件系统。
 
-**注意**：如果用户需要**编写**测试脚本，请切换到 `testany-case-writing` workflow；如宿主支持 slash command，也可建议 `/testany-case-writing`。
+**关键前提**：
+- Testany `case` 是**可复用原子自动化步骤包**
+- Testany **不支持直接执行单条 case**
+- 如果用户要真正执行，后续仍需要 `testany-pipeline`
 
 用户输入: $ARGUMENTS
 
@@ -23,203 +26,259 @@ argument-hint: "[操作] [描述]，如：创建 case、查看 A1B2C3D4、删除
 
 ---
 
+## 先统一心智模型
+
+使用本 skill 前，先按 [automation-model.md](../testany-guide/references/automation-model.md) 理解边界：
+
+- 上游给出的通常是 **traditional test scenario**
+- `testany-case-writing` 负责把它拆成 **platform cases**，并产出脚本、ZIP 与 decomposition
+- 本 skill 负责把这些 **platform case packages 注册到 Testany 平台**
+- `testany-pipeline` 负责把 platform cases 组装成可执行 pipeline
+- `testany-trigger` 负责配置 `Plan / Manual Trigger / Gatekeeper`
+
+**重要结论**：
+- 本 skill 的主路径不应该是“现场理解业务场景并写 case”
+- 本 skill 的主路径应该是“消费上游已准备好的 package / metadata / decomposition，完成平台注册与生命周期管理”
+
+---
+
+## 职责
+
+- 注册 `testany-case-writing` 已产出的 platform case packages
+- 创建 case shell、补齐 case metadata、上传脚本 ZIP
+- 查询、更新、批量更新、删除平台上的 platform cases
+- 在变更后提醒用户检查下游 pipeline 影响面
+- 在可行时触发 dry run 验证 case 是否 ready
+
+## 不负责的事情
+
+- **不**负责把传统测试场景拆解成 platform cases；这属于 `testany-case-writing`
+- **不**负责创建或更新 pipeline；这属于 `testany-pipeline`
+- **不**负责配置 Plan / Manual Trigger / Gatekeeper；这属于 `testany-trigger`
+
+---
+
 ## 操作速查
 
 | 用户意图 | 操作类型 | 工具 |
 |---------|---------|------|
-| 创建新 case | Create | `testany_create_case` → `testany_update_case` → `testany_update_case_script` |
+| 注册新的 platform case | Create | `testany_create_case` → `testany_update_case` → `testany_update_case_script` |
 | 查看 case 详情 | Read | `testany_get_case` |
 | 查看 case 脚本内容 | Read | `testany_get_case_script` |
 | 搜索/列出 cases | Read | `testany_list_cases` |
 | 列出我的 cases | Read | `testany_list_my_cases` |
-| 修改 case 配置 | Update | `testany_update_case` |
-| 更新 case 脚本 | Update | `testany_update_case_script` |
+| 更新 metadata / script | Update | `testany_update_case` / `testany_update_case_script` |
 | 删除 case | Delete | `testany_delete_case` |
 | 批量更新 cases | Bulk Update | `testany_bulk_update_cases` |
 | 批量删除 cases | Bulk Delete | `testany_bulk_delete_cases` |
-| 验证 case 配置 | Validate | `testany_dry_run_case` → `testany_get_dry_run_result` |
+| dry run 验证 | Validate | `testany_dry_run_case` → `testany_get_dry_run_result` |
 
 ---
 
-## Single Case 操作
+## Create（注册新的 platform case）
 
-### Create（创建）
+### Phase 0: 先判断输入模式
 
-创建新 case 分为三个阶段：先收集可选项，再统一询问用户，最后执行创建。
+按以下优先级选择输入模式：
 
-#### 阶段 1: 收集可选项（并行调用）
+1. **Primary：已有 platform case package**
+   - 来自 `testany-case-writing`
+   - 已准备好脚本、ZIP、metadata、executor 选择
+   - 最适合本 skill
 
-同时调用以下工具获取可选项：
-- `testany_filter_case_runtimes` → 获取运行环境列表（uuid + name）
-- `testany_get_my_workspaces` → 获取用户有权限的工作空间列表
+2. **Secondary：已有脚本/ZIP，但 metadata 不完整**
+   - 可以在本 skill 中补齐名称、可见性、labels、case_meta 等字段
 
-#### 阶段 2: 一次性收集缺失信息（优先使用结构化提问工具）
+3. **Fallback：只想先创建草稿 shell case**
+   - 仅当用户明确要求占位、预留 key、先建空壳时使用
+   - 不能把它包装成“已经完成自动化落地”
 
-优先使用结构化提问工具一次性询问以下问题；如宿主不支持，则用一条普通消息集中提问：
+如果用户只有传统测试场景，没有脚本、ZIP、decomposition：
+- 停止直接创建
+- 切到 `testany-case-writing`
 
-| 问题 | 类型 | 选项来源 |
-|------|------|---------|
-| Case 名称 | 用户输入 | - |
-| 运行环境 | 单选 | 阶段 1 获取的 runtimes（显示 name，推荐 cloudprime） |
-| 可见性 | 单选 | "全局可见（所有人）" / "仅特定工作空间可见" |
-| 工作空间 | 多选 | 阶段 1 获取的 workspaces（仅当选择"特定工作空间"时需要） |
+### Phase 1: 准备可选项
 
-**注意**：如果使用 AskUserQuestion，该工具最多支持 4 个问题。如果用户选择"全局可见"，workspace 问题可跳过。
+并行获取：
+- `testany_filter_case_runtimes`
+- `testany_get_my_workspaces`
 
-#### 阶段 3: 创建 case
+如涉及 labels，先：
+- `testany_list_labels`
+- 如缺失再 `testany_create_label`
 
-根据用户回答调用 `testany_create_case`：
-- `name`：用户输入的名称
-- `runtime_uuid`：用户选择的运行环境对应的 UUID
-- `is_private`：全局可见 = false，特定工作空间 = true
-- `workspace_keys`：如果 is_private=true，传入用户选择的工作空间列表；否则 `[]`
+### Phase 2: 收集注册所需字段
 
-#### 阶段 4: 配置执行方式（可选）
+优先一次性收集以下内容：
 
-如果用户有测试脚本，需要配置 `case_meta.trigger_method`：
-- 调用 `testany_update_case` 设置 executor 和 trigger 配置
-- 详细配置规则见 [Executor 配置详解](./references/executors.md)
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| `name` | 是 | platform case 名称 |
+| `runtime_uuid` | 是 | 运行环境 UUID，推荐 cloudprime |
+| `is_private` | 是 | Global / Private |
+| `workspace_keys` | 条件必填 | 私有 case 需要 |
+| `description` | 建议 | 说明该 platform case 的原子职责 |
+| `case_labels` | 建议 | 用于目录视图和检索 |
+| `case_meta` | 条件必填 | 运行所需配置，具体字段见 executors reference |
+| ZIP / 脚本包 | 条件必填 | 若目标是注册 runnable case，通常需要 |
 
-#### 阶段 5: 上传脚本（可选）
+**收集原则**：
+- 主路径假设用户已经有 package；本 skill 只做“平台注册与补齐元数据”
+- 如果用户明确只要草稿 case，可暂不上传 ZIP，但必须明确这是占位资产，不可直接执行
 
-调用 `testany_update_case_script` 上传测试脚本。
+### Phase 3: 创建 shell case
 
-### Read（查询）
+调用 `testany_create_case`：
+- `name`
+- `runtime_uuid`
+- `is_private`
+- `workspace_keys`
+
+### Phase 4: 补齐 metadata / 运行配置
+
+调用 `testany_update_case` 设置：
+- `description`
+- `case_labels`
+- `environments`
+- `owned_by`
+- `case_version`
+- `case_meta`
+
+这里的 `case_meta` 后端字段名仍然是 `trigger_method`，但它表示的是 **case 级运行入口配置**：
+- `executor`
+- `trigger_path`
+- `trigger_command`
+
+它不等于 `Plan / Manual Trigger / Gatekeeper` 这类 pipeline trigger。
+
+详细字段规则见：
+- [Case 元数据规范](./references/case-metadata-spec.md)
+- [Executor 配置详解](./references/executors.md)
+
+### Phase 5: 上传脚本 ZIP
+
+如果用户已经准备好脚本包，调用 `testany_update_case_script` 上传。
+
+如脚本中包含以下能力，提醒用户同步补齐配置：
+- Relay 输出
+- Secure key / credential 引用
+
+### Phase 6: 可选 dry run
+
+如用户要求验证，或刚补齐了必填字段：
+1. `testany_dry_run_case`
+2. `testany_get_dry_run_result`
+
+### Phase 7: 明确 downstream handoff
+
+创建完成后，必须显式说明：
+- 这是已注册的 **platform case**
+- 如果用户要形成可执行链路，下一步需要 `testany-pipeline`
+- 即使只有一个 case，要在 Testany 中执行也仍需一条 pipeline
+
+---
+
+## Read（查询）
 
 | 场景 | 工具 | 说明 |
 |------|------|------|
 | 获取单个 case 详情 | `testany_get_case` | 传入 case key |
 | 获取 case 脚本内容 | `testany_get_case_script` | 下载 ZIP 并返回文件内容 |
+| 搜索所有 cases | `testany_list_cases` | 支持 workspace / keyword / page 等过滤 |
+| 列出我的 cases | `testany_list_my_cases` | 适合个人资产盘点 |
 
-### Update（更新）
+---
 
-#### 可更新的字段
+## Update（更新）
+
+### 可更新的字段
 
 | 字段 | 说明 |
 |------|------|
 | `name` | case 名称 |
-| `description` | 描述 |
-| `is_private` | 可见性（true=私有，false=全局） |
-| `workspace_keys` | 可见的工作空间列表 |
-| `environments` | 环境标签列表 |
-| `case_labels` | 标签列表 |
+| `description` | 原子职责说明 |
+| `is_private` | 可见性 |
+| `workspace_keys` | 私有 case 的工作空间列表 |
+| `environments` | 环境标签 |
+| `case_labels` | 分类标签 |
 | `case_version` | 版本号 |
-| `owned_by` | 所有者邮箱 |
-| `case_meta` | 执行配置（trigger_method, environment_variables） |
+| `owned_by` | 所有者 |
+| `case_meta` | 运行配置 |
+| 脚本 ZIP | 通过 `testany_update_case_script` 上传 |
 
-#### 更新配置流程
+### 更新流程
 
-1. 调用 `testany_get_case` 获取当前配置
-2. 优先使用结构化提问工具确认要修改哪些字段及新值；如宿主不支持，则用普通文本确认
-3. 调用 `testany_update_case` 提交更新（只传需要修改的字段）
+1. `testany_get_case` 获取当前配置
+2. 确认要修改的字段
+3. `testany_update_case` 提交 metadata 更新
+4. 如需替换脚本，再 `testany_update_case_script`
 
-#### 更新脚本
+### 必须提醒用户检查下游 pipeline 的情况
 
-调用 `testany_update_case_script` 上传新的测试脚本。
+如果修改了以下内容，必须提示用户同步检查相关 pipeline：
+- executor 相关配置
+- 脚本入口或运行命令
+- Relay 输出变量
+- 输入环境变量名称
+- 脚本内部行为导致的输入/输出变化
 
-#### 检测脚本中的 Relay / Credentials 使用
+原因：
+- pipeline 可能依赖该 case 的 relay、顺序或输入输出约定
+- 平台 case 是可复用资产，case 变更可能影响多个 pipeline
 
-如果用户上传的脚本中包含以下代码，需要在 `testany_update_case` 中配置相应设置：
-
-| 脚本中的代码特征 | 需要配置 |
-|-----------------|---------|
-| `TESTANY_OUTPUT_RELAY_SERVICE` | 添加 `type='output'` 的环境变量 |
-| `TESTANY_SECRETS_SERVICE` | 绑定 credential safe 和 credential keys |
-
-**检测方法**：调用 `testany_get_case_script` 读取脚本内容，搜索上述关键字。
-
-### Delete（删除）
-
-调用 `testany_delete_case`，传入 case key。
-
-**警告**：此操作不可撤销。
+如果用户下一步就要修这些引用关系，切到 `testany-pipeline`。
 
 ---
 
-## Bulk Case 操作
+## Delete（删除）
 
-### List / Search（列表/搜索）
+### 单个删除
 
-| 场景 | 工具 |
-|------|------|
-| 搜索所有 cases | `testany_list_cases` |
-| 仅列出我的 cases | `testany_list_my_cases` |
+调用 `testany_delete_case` 前，必须先明确告知用户：
+- 如果该 case 已被编排到一个或多个 pipeline 中，平台会返回 `409`
+- 需要先把该 case 从相关 pipeline 中移除，才能删除
+- 如果该 case 是 Git 导入资产，也可能无法手动删除
 
-支持的过滤条件：
-- `workspace` - 按工作空间过滤
-- `keyword` - 按名称关键词搜索
-- `version` - 按版本过滤
-- `environment` - 按环境过滤
-- `page` / `page_size` - 分页
+**当前限制**：
+- 如 MCP 侧没有现成的 “used by pipeline” 查询工具，则无法在删除前完全自动 preflight
+- 因此应把删除结果视为“可能失败的受约束操作”，而不是无条件直删
 
-### Bulk Update（批量更新）
+如果删除失败并返回 `409`：
+- 明确向用户解释原因
+- 建议先去 `testany-pipeline` 解除组装关系，再重试
 
-调用 `testany_bulk_update_cases`，可批量更新多个 case 的：
-- `version` - 版本
-- `environments` - 环境列表
-- `workspaces` - 工作空间列表
-- `is_private` - 可见性
+### 批量删除
 
-**注意**：Append 操作时，重复的 key 会 **覆盖** 现有值。
-
-### Bulk Delete（批量删除）
-
-调用 `testany_bulk_delete_cases`，传入 case keys 数组。
-
-**警告**：此操作不可撤销。
-
-### Labels 与目录视图
-
-Testany 使用 **labels** 实现虚拟目录结构：
-- 通过 `case_labels` 字段管理 case 的标签
-- 一个 case 可以有多个 labels，从而出现在多个目录下
-- 批量操作可以追加或替换 labels
+`testany_bulk_delete_cases` 同样受上述约束：
+- 任何已被 pipeline 组装的 case 都会导致删除受阻
+- 先提醒风险，再执行
 
 ---
 
-## 辅助操作
+## Labels 与目录视图
 
-### Filter（过滤选项）
+Testany 使用 `case_labels` 实现虚拟目录结构：
+- 一个 case 可以有多个 labels
+- Labels 必须先存在，才能在 case 上引用
 
-| 工具 | 用途 |
-|------|------|
-| `testany_filter_case_runtimes` | 获取可用运行环境列表（创建 case 前必调） |
-| `testany_filter_case_versions` | 获取可用版本列表（用于搜索过滤） |
-| `testany_filter_case_environments` | 获取可用环境列表（用于搜索过滤） |
-
-### Dry Run（验证）
-
-验证 case 配置是否正确：
-
-1. 调用 `testany_dry_run_case` → 触发 dry run，返回 `dry_run_id`
-2. 调用 `testany_get_dry_run_result` → 使用 `dry_run_id` 查询结果
+典型流程：
+1. `testany_list_labels`
+2. 如缺失，`testany_create_label`
+3. `testany_update_case` / `testany_bulk_update_cases` / `testany_bulk_append_cases`
 
 ---
 
-## 工具完整清单
+## Dry Run（验证）
 
-共 15 个 MCP 工具：
+dry run 只验证 **case 本身是否 ready**，不替代 pipeline 编排验证。
 
-**Single Case CRUD (6)**
-- `testany_create_case` - 创建 case
-- `testany_get_case` - 获取 case 详情
-- `testany_get_case_script` - 获取 case 脚本内容
-- `testany_update_case` - 更新 case 配置
-- `testany_update_case_script` - 更新 case 脚本
-- `testany_delete_case` - 删除 case
+流程：
+1. `testany_dry_run_case`
+2. `testany_get_dry_run_result`
 
-**Bulk Case CRUD (4)**
-- `testany_list_cases` - 搜索/列出 cases
-- `testany_list_my_cases` - 列出我的 cases
-- `testany_bulk_update_cases` - 批量更新
-- `testany_bulk_delete_cases` - 批量删除
-
-**辅助 (5)**
-- `testany_filter_case_runtimes` - 获取运行环境列表
-- `testany_filter_case_versions` - 获取版本列表
-- `testany_filter_case_environments` - 获取环境列表
-- `testany_dry_run_case` - 触发 dry run
-- `testany_get_dry_run_result` - 获取 dry run 结果
+典型用途：
+- 新上传脚本后确认 case 已可运行
+- 更新必填字段后确认配置完整
 
 ---
 
@@ -227,10 +286,11 @@ Testany 使用 **labels** 实现虚拟目录结构：
 
 | 场景 | 处理方式 |
 |------|---------|
-| 用户没提供脚本但想创建 case | 建议切换到 `testany-case-writing` workflow；如宿主支持 slash command，也可建议 `/testany-case-writing` |
-| 需要 relay 输出 | 1) 配置 `type='output'` 环境变量，2) 代码中 POST 到 `TESTANY_OUTPUT_RELAY_SERVICE` |
-| 需要使用凭证 | 1) 绑定凭证到 case，2) 代码中调用 `TESTANY_SECRETS_SERVICE` API |
-| 更新已有 case | 先 `testany_get_case` 获取当前配置，再用结构化提问工具或普通文本确认修改项 |
+| 用户只有传统测试场景，没有 package | 先去 `testany-case-writing` |
+| 用户要注册多个原子步骤 | 按 package inventory 逐个创建/更新 case |
+| 用户希望形成可执行链路 | case 注册后继续到 `testany-pipeline` |
+| 用户想删除 case | 先提醒 pipeline 组装约束与 409 风险 |
+| 用户更新了 relay / 输入输出相关字段 | 提醒同步检查相关 pipeline |
 
 ---
 
@@ -239,32 +299,19 @@ Testany 使用 **labels** 实现虚拟目录结构：
 任务完成后，向用户汇报：
 - Case Key（如 `A1B2C3D4`）
 - Case 名称
-- Executor 类型（如已配置）
+- 该 case 的原子职责
+- 是否已上传脚本 ZIP
 - 可见性（Global / Private + 工作空间列表）
-- 下一步建议（如"可以创建 pipeline 来编排执行"）
-
----
-
-## 查阅官方文档
-
-遇到不确定的问题时，查阅 Testany 官方文档：
-
-1. **获取文档结构**：`WebFetch https://docs.testany.io/sitemap.xml`
-2. **找到相关页面**：从 sitemap 中搜索关键词（如 `case`、`relay`、`credential`）
-3. **读取具体页面**：`WebFetch https://docs.testany.io/en/docs/<page-name>/`
-
-**常用文档页面**：
-- `/en/docs/managing-test-case/` - 测试用例管理
-- `/en/docs/managing-test-case-with-relay-case/` - Relay 配置
-- `/en/docs/managing-test-credential/` - 凭证管理
-- `/en/docs/bulk-manage-test-cases/` - 批量操作
-- `/en/docs/manage-directory-view-of-test-case/` - 目录视图
+- 是否已 dry run
+- 下一步建议：
+  - 注册完成但尚未可执行 → 去 `testany-pipeline`
+  - 已有 pipeline 但缺执行入口 → 去 `testany-trigger`
 
 ---
 
 ## 参考文档
 
-详细配置规则请参考：
-- [Case 元数据规范](./references/case-metadata-spec.md) - **必读**：name/labels/description/env_vars 的填写标准，确保 Pipeline 编排顺利
-- [Executor 配置详解](./references/executors.md) - 包含 trigger_method 配置和环境变量类型
-- [核心概念](./references/concepts.md) - 包含可见性规则和实体定义
+- [Testany 自动化对象模型](../testany-guide/references/automation-model.md)
+- [Case 元数据规范](./references/case-metadata-spec.md)
+- [Executor 配置详解](./references/executors.md)
+- [核心概念](./references/concepts.md)

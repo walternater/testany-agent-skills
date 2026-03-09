@@ -10,18 +10,20 @@ description: Testany 平台核心概念和配置参考
 ## 核心实体关系
 
 ```
-Case (测试用例)
+Traditional Test Scenario
   │
-  ├──► Pipeline (流水线) ──► Execution (执行)
-  │         │
-  │         ├──► Plan (定时计划)
-  │         └──► Gatekeeper (质量门禁)
-  │
-  └──► Workspace (工作空间) ──► 权限控制
+  └──► Testany Platform Case
+             │
+             └──► Pipeline (执行与编排单元) ──► Execution
+                           │
+                           ├──► Plan
+                           ├──► Manual Trigger
+                           └──► Gatekeeper
 ```
 
 ## 快速参考
 
+- 对象边界与职责链 → [automation-model.md](references/automation-model.md)
 - 实体定义和可见性规则 → [concepts.md](references/concepts.md)
 - Executor 配置详解 → [executors.md](references/executors.md)
 - Pipeline YAML 语法 → [pipeline-yaml.md](references/pipeline-yaml.md)

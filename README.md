@@ -118,12 +118,12 @@ testany-agent-skills/
 
 | 命令 | 描述 |
 |------|------|
-| `/testany-bot:case` | 测试用例管理 - 创建、配置、更新用例，上传脚本 |
-| `/testany-bot:case-writing` | 测试脚本编写 - 根据需求生成测试用例文档和脚本 |
-| `/testany-bot:pipeline` | 流水线编排 - 创建 Pipeline，配置依赖和 Relay |
+| `/testany-bot:case` | Platform Case 注册与管理 - 注册 case package、更新 metadata、上传脚本、管理生命周期 |
+| `/testany-bot:case-writing` | Platform Case 编写 - 将传统测试场景拆解为 Testany platform cases，并生成可注册 case packages |
+| `/testany-bot:pipeline` | 流水线编排 - 基于 decomposition 或 case keys 创建 Pipeline，配置依赖、Relay 和分支 |
 | `/testany-bot:tests` | 测试执行 - 触发 Pipeline 执行，监控状态 |
 | `/testany-bot:debug` | 故障诊断 - 分析失败原因，查看日志 |
-| `/testany-bot:trigger` | 测试触发 - 创建门禁、定时计划，提供集成代码 |
+| `/testany-bot:trigger` | 测试触发 - 为 Pipeline 配置 Plan、Manual Trigger、Gatekeeper |
 | `/testany-bot:workspace` | 工作空间管理 - 成员管理、权限配置 |
 
 # 创建自定义 Skill

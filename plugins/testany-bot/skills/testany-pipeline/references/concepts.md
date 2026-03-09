@@ -2,7 +2,7 @@
 
 ## Pipeline（流水线）
 
-**定义**：编排多个 case 的执行单元
+**定义**：编排多个 case 的执行与编排单元
 
 **属性**：
 - `pipeline_key`: 格式为 `{WS_KEY}-{4-5位大写十六进制}`（如 `Y2K-0601`、`Y2K-0001A`）
@@ -15,13 +15,17 @@
 - `owned_by`: 所有者（可通过更新转移）
 - `pipeline_labels`: Pipeline 标签列表
 
-Pipeline 支持依赖关系（whenPassed/whenFailed）和变量传递（relay）。
+Pipeline 支持依赖关系（whenPassed/whenFailed）、变量传递（relay）和 `expect: fail`。
+
+**说明**：
+- Testany 平台执行的是 Pipeline，而不是单条 Case。
+- 即使只有一个 Case，要真正执行也仍然需要一条 Pipeline。
 
 ---
 
 ## Case（测试用例）
 
-**定义**：可复用的测试脚本单元
+**定义**：Testany 平台上的可复用原子自动化步骤包
 
 **属性**：
 - `case_key`: 8 位大写十六进制标识符（如 `A1B2C3D4`）
@@ -29,6 +33,10 @@ Pipeline 支持依赖关系（whenPassed/whenFailed）和变量传递（relay）
 - `case_meta`: 执行配置（trigger_method, environment_variables）
 
 Pipeline 通过 `case_key` 引用 case。
+
+**说明**：
+- Case 不等同于传统测试语义中的完整测试场景。
+- 一个传统测试场景可能会拆成多个 Cases，再由 Pipeline 编排。
 
 ---
 

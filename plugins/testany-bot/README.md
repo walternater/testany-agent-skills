@@ -1,6 +1,6 @@
 # Testany Bot - 通用版
 
-Testany 测试平台智能助手，支持测试用例管理、流水线编排、执行监控、故障诊断、CI/CD 集成。
+Testany 测试平台智能助手，支持 platform case 编写与注册、pipeline 编排、执行监控、故障诊断、CI/CD 集成。
 
 ## 兼容性
 
@@ -54,12 +54,12 @@ testany-bot/
 
 | 技能 | 描述 | 主要操作 |
 |------|------|---------|
-| **testany-case** | 测试用例管理 | 创建、配置、更新用例，上传脚本 |
-| **testany-case-writing** | 测试脚本编写 | 根据需求生成测试用例文档和脚本 |
-| **testany-pipeline** | 流水线编排 | 创建 Pipeline，配置依赖和 Relay |
+| **testany-case** | Platform Case 注册与管理 | 注册 case package、更新 metadata、上传脚本、管理生命周期 |
+| **testany-case-writing** | Platform Case 编写 | 将传统测试场景拆解为 Testany platform cases，并生成可注册 case packages |
+| **testany-pipeline** | 流水线编排 | 基于 decomposition 或 case keys 创建 Pipeline，配置依赖、Relay 和分支 |
 | **testany-tests** | 测试执行 | 触发 Pipeline 执行，监控状态 |
 | **testany-debug** | 故障诊断 | 分析失败原因，查看日志 |
-| **testany-trigger** | 测试触发 | 创建门禁、定时计划，提供集成代码 |
+| **testany-trigger** | 测试触发 | 为 Pipeline 配置 Plan、Manual Trigger、Gatekeeper |
 | **testany-workspace** | 工作空间管理 | 成员管理、权限配置 |
 | **testany-guide** | 参考知识 | 核心概念、Executor 配置、YAML 语法 |
 
@@ -68,19 +68,19 @@ testany-bot/
 ### 命令触发（宿主支持 slash command 时）
 
 ```
-/case 上传这个测试脚本到 Testany
-/case-writing 写一个测试用户登录 API 的 Python 测试
-/pipeline 把登录和查询用例组成流水线
+ /case 把这些 ZIP 和 metadata 注册成 Testany cases
+/case-writing 把登录场景拆成可上传到 Testany 的 cases
+/pipeline 根据 decomposition 把登录和查询 cases 组成流水线
 /tests Y2K-0601
 /debug Y2K-0601-00001
-/trigger 创建质量门禁
+/trigger 创建手动触发或 Gatekeeper
 /workspace 添加成员
 ```
 
 ### 自然语言
 
 ```
-帮我创建一个 Postman 测试用例
+帮我把这些自动化脚本注册成 Testany cases
 执行回归测试流水线
 这个测试为什么失败了？
 ```
@@ -117,9 +117,11 @@ flowchart LR
 
 ## 注意事项
 
-1. **Pipeline 执行**：Testany 只支持执行 Pipeline，不支持直接执行单个 Case
-2. **Relay 配置**：配置变量传递前需验证源/目标 Case 的环境变量类型
-3. **Runtime 选择**：推荐使用 `cloudprime` runtime
+1. **Case vs Scenario**：Testany Case 是可复用原子步骤包，不等同于传统测试场景
+2. **Pipeline 执行**：Testany 只支持执行 Pipeline，不支持直接执行单个 Case
+3. **Trigger 边界**：Plan / Manual Trigger / Gatekeeper 都是执行入口，不是编排层
+4. **Relay 配置**：配置变量传递前需验证源/目标 Case 的环境变量类型
+5. **Runtime 选择**：推荐使用 `cloudprime` runtime
 
 ## 与 Claude Code 专用版的区别
 

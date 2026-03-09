@@ -4,7 +4,7 @@
 
 ### Case（测试用例）
 
-**定义**：可复用的测试脚本单元
+**定义**：Testany 平台上的可复用原子自动化步骤包
 
 **属性**：
 - `case_key`: 8 位大写十六进制标识符（如 `A1B2C3D4`）
@@ -14,9 +14,14 @@
 - `is_private`: 可见性控制
 - `workspace_keys`: 私有 case 可见的工作空间列表
 
+**说明**：
+- Case 是平台资产，不等同于传统测试设计里的完整测试场景。
+- Case 应尽量保持原子、自包含、可重复执行。
+- Case 可以输出 relay 变量，供 pipeline 中的下游 case 使用。
+
 ### Pipeline（流水线）
 
-**定义**：编排多个 case 的执行单元
+**定义**：编排多个 case 的执行与编排单元
 
 **属性**：
 - `pipeline_key`: 格式为 `{WS_KEY}-{4-5位大写十六进制}`（如 `Y2K-0601`、`Y2K-0001A`）
@@ -24,6 +29,10 @@
 - `definition`: YAML 格式的执行规则定义（Pipeline YAML）
 - `case_keys`: Case keys 列表（可替代 `definition`）
 - 支持依赖关系（whenPassed/whenFailed）和变量传递（relay）
+
+**说明**：
+- Testany 平台执行的是 Pipeline，而不是单条 Case。
+- 即使只有一个 Case，要真正执行也仍然需要一条 Pipeline。
 
 ### Execution（执行）
 
@@ -43,6 +52,16 @@
 - `schedule_expr`: 标准 5 段 Cron（UNIX）`分 时 日 月 周`
 - `timezone`: 时区（为空时后端默认 `Asia/Shanghai`）
 - watchers / notify_ignore_success：通知相关配置（可选）
+
+### Manual Trigger（手动触发）
+
+**定义**：按需执行一个或多个 pipeline 的触发模板
+
+**属性**：
+- `manual_trigger_key`: 格式为 `M-{workspace_key}-{4~5位大写十六进制}`
+- 关联一个或多个 pipeline
+- 支持按需发起执行，不依赖定时调度或外部 webhook
+- Owner 与实际执行人是两个不同概念
 
 ### Gatekeeper（Webhook 触发器）
 

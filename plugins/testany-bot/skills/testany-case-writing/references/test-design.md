@@ -1,16 +1,29 @@
 # 测试设计原则
 
-## Test Case vs Assertion
+## 先区分 3 个层级
+
+| 层级 | 含义 | 例子 |
+|------|------|------|
+| `Traditional Test Scenario` | 传统测试语义中的完整测试场景 | “用户订阅成功并验证只读约束” |
+| `Testany Platform Case` | Testany 平台中的原子自动化步骤包 | `LOGIN`、`SUBSCRIBE`、`READONLY_CHECK` |
+| `Assertion` | 单个 platform case 内部的验证点 | `status == 200`、`source == subscribed` |
+
+**关键结论**：
+- `test-spec` 产出的是 `Traditional Test Scenario`
+- `testany-case-writing` 写的是 `Testany Platform Case`
+- 一个传统测试场景通常会拆成多个 platform cases，再由 pipeline 编排
+
+## Testany Platform Case vs Assertion
 
 | 概念 | 定义 | 粒度 |
 |------|------|------|
-| **Test Case** | 测试一个完整的用户行为或系统场景 | 粗粒度 |
-| **Assertion** | Test Case 内部的单个验证点 | 细粒度 |
+| **Platform Case** | 在 Testany 平台中注册和复用的原子自动化步骤包 | 中粒度 |
+| **Assertion** | Platform Case 内部的单个验证点 | 细粒度 |
 
-**关系**：一个 Test Case 包含多个 Assertions。
+**关系**：一个 Platform Case 包含多个 Assertions。
 
 ```
-Test Case: 用户订阅 Gallery Item
+Platform Case: 订阅 Gallery Item
 ├── Assertion 1: 资源创建成功
 ├── Assertion 2: source = 'subscribed'
 ├── Assertion 3: source_gallery_item_id 正确
@@ -19,7 +32,7 @@ Test Case: 用户订阅 Gallery Item
 
 ---
 
-## 从 PRD 到 Test Case 的设计流程
+## 从 PRD 到 Traditional Test Scenario 的设计流程
 
 ### 错误做法：Checklist 思维
 
@@ -48,31 +61,52 @@ AC5: version 正确   ─┘
 AC6: 只读约束       →      Case 3: 权限约束（独立场景）
 AC7: 信息不可见     →      Case 4: 信息保护（独立场景）
 
-✓ 按用户行为/系统场景划分
+✓ 先按用户行为/系统场景划分
+
+---
+
+## 从 Traditional Test Scenario 到 Testany Platform Cases
+
+场景确定之后，还要继续判断它在 Testany 平台上应拆成几个 platform cases。
+
+### 需要拆分的典型信号
+
+- 某一步会产出 relay 输出给下游复用
+- 某一步本身就是可复用前置动作，例如登录、创建资源、清理资源
+- 不同步骤需要不同 executor / runtime
+- 存在条件分支、失败分支或 `expect: fail`
+- 你希望将主流程验证与后置验证拆开维护
+
+### 不需要继续拆分的典型信号
+
+- 整个动作天然原子
+- 同一 executor 即可表达
+- 没有 relay、条件分支或跨步骤依赖
+- 多个 assertions 都属于同一原子动作的自然结果
 ```
 
 ---
 
-## Test Case 划分原则
+## Traditional Test Scenario 划分原则
 
-### 原则 1: 一个 Test Case = 一个用户行为
+### 原则 1: 一个 Traditional Test Scenario = 一个完整用户行为/业务验证目标
 
 **问**：用户做了什么？
-- 用户点击订阅按钮 → 一个 Test Case
-- 用户尝试编辑订阅资源 → 一个 Test Case
-- 用户尝试查看 Instruction → 一个 Test Case
+- 用户点击订阅按钮 → 一个 Traditional Test Scenario
+- 用户尝试编辑订阅资源 → 一个 Traditional Test Scenario
+- 用户尝试查看 Instruction → 一个 Traditional Test Scenario
 
-### 原则 2: 相关验证点合并为 Assertions
+### 原则 2: 相关验证点合并为 Assertions，再决定是否需要多个 Platform Cases
 
 **问**：这些验证点是同一个行为的结果吗？
-- 订阅后资源创建 + source 正确 + version 正确 = 同一行为的多个检查点 → 合并
-- 订阅后资源创建 vs 编辑被拒绝 = 不同行为 → 分开
+- 订阅后资源创建 + source 正确 + version 正确 = 同一原子动作的多个检查点 → 可合并在同一个 Platform Case
+- 订阅成功 vs 编辑被拒绝 = 不同动作，且后者依赖前者产物 → 更适合拆成多个 Platform Cases
 
-### 原则 3: 独立场景独立 Case
+### 原则 3: 独立场景独立 Scenario；可复用步骤独立 Platform Case
 
 **问**：这个验证需要独立的前置条件或操作吗？
-- UI 按钮存在（无需登录）→ 独立 Case
-- 只读约束（需要先订阅）→ 独立 Case，依赖订阅 Case
+- UI 按钮存在（无需登录）→ 独立 Scenario
+- 只读约束（需要先订阅）→ 独立 Scenario；在平台实现上通常依赖前置 Platform Case
 
 ---
 
@@ -128,15 +162,14 @@ AC7: 信息不可见     →      Case 4: 信息保护（独立场景）
 6. 只读约束
 7. Instruction 不可见
 
-**Test Case 设计**：
+**Traditional Test Scenario 设计**：
 
-| Case（别名） | 场景 | 包含的 Assertions |
+| Scenario | 场景 | 在平台上的建议实现 |
 |------|------|------------------|
-| `AC1_BTN` | 订阅按钮存在 | AC1 |
-| `LOGIN` | 登录（前置） | - |
-| `SUBSCRIBE` | 订阅并验证资源创建 | AC2 + AC3 + AC4 + AC5 |
-| `READONLY` | 只读约束 | AC6 |
-| `HIDE_INST` | Instruction 不可见 | AC7 |
+| `BTN_VISIBLE` | 订阅按钮存在 | 1 个独立 platform case |
+| `SUBSCRIBE_FLOW` | 订阅并验证资源创建 | 登录 case + 订阅 case |
+| `READONLY` | 只读约束 | 依赖订阅结果的独立 platform case |
+| `HIDE_INST` | Instruction 不可见 | 依赖订阅结果的独立 platform case |
 
 **Pipeline YAML**：
 
@@ -169,4 +202,7 @@ spec:
           refKey: C3D4E5F6/RESOURCE_ID
 ```
 
-**结果**：7 个 AC → 5 个 Test Cases（不是 7+ 个）
+**结果**：
+- 7 个 AC 先收敛成 4 个 Traditional Test Scenarios
+- 再映射成 5 个 Testany Platform Cases
+- 最终通过一条 pipeline 编排运行
