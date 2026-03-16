@@ -1,6 +1,6 @@
 ---
 name: test-strategy-writer
-description: 'Write test strategy, 测试策略撰写。Use when: PRD、API Contract、HLD 基线明确后，需要定义独立测试范围、独立测试层次、环境策略、入口/出口标准。'
+description: 'Write test strategy, 测试策略撰写。Use when: PRD、API Contract、HLD 基线明确后，需要定义独立测试范围、独立测试层次、阶段化执行规则、环境策略、入口/出口标准。'
 ---
 
 # Test Strategy Writer
@@ -14,9 +14,10 @@ description: 'Write test strategy, 测试策略撰写。Use when: PRD、API Cont
 | **策略优先** | 只定义独立测试方法、层次、环境、准入/准出，不写详细 case 步骤 |
 | **风险驱动** | 先识别高风险需求、关键路径、外部依赖，再分配测试层次 |
 | **基线对齐** | 所有结论必须承接 PRD/API/HLD/Guardrails，不得脱离基线猜测 |
+| **阶段优先** | 测试阶段是硬约束，决定“当前节点应不应该执行什么测试”；环境是能力与建议边界，不能直接替代阶段定义 |
 | **执行现实** | 测试环境、数据、依赖、观测能力必须具备现实可行性 |
 | **为下游让路** | 策略要能直接指导 test-spec-writer，避免后续重复解释 |
-| **边界清晰** | unit、code-level integration、provider-side contract 属于开发内建质量层，由 HLD/LLD/实现承接，不由本 skill 设计 |
+| **边界清晰** | unit、code-level integration 属于开发内建质量层；批准 API Contract 的黑盒验证与回归属于 QA 独立测试范围。若开发/SDET 提供 provider-side contract suite，只能作为补充证据，不默认存在，也不能替代 QA 结论 |
 | **元数据强制** | 输出必须包含符合 `test-strategy-profile-v1` 的 `TRACEABILITY-METADATA` block，并通过脚本校验 |
 
 ## 内容边界
@@ -26,6 +27,8 @@ description: 'Write test strategy, 测试策略撰写。Use when: PRD、API Cont
 - 测试目标与质量风险
 - In-scope / Out-of-scope
 - 独立测试层分配（System Integration / E2E-Journey / Regression / Compatibility / Non-functional）
+- API Contract 验证策略（QA 主责的黑盒契约验证范围、覆盖维度、证据与出口要求）
+- 阶段化执行规则（阶段是硬约束；环境是推荐执行面与能力边界）
 - 环境、数据、依赖与观测策略
 - 入口/出口标准、缺陷分级、豁免规则
 - 自动化优先级与回归策略
@@ -37,7 +40,9 @@ description: 'Write test strategy, 测试策略撰写。Use when: PRD、API Cont
 - 完整测试用例包
 - 测试执行结果或发布 Go/No-Go 结论
 - 与 PRD/HLD 冲突的新业务范围
-- unit、code-level integration、provider-side contract 的设计细节
+- unit、code-level integration 的设计细节
+- provider-side contract harness / 白盒契约自动化的实现细节
+- 用环境名称直接替代阶段定义（例如只写“Pre-prod 才测”，但不说明这是哪个执行阶段的硬门禁）
 
 ## Traceability Metadata（强制）
 
@@ -78,9 +83,10 @@ writer 至少要做到：
 
 □ Phase 2: 独立测试分层与环境策略
   □ 2.1 分配独立测试层次与 owner
-  □ 2.2 定义环境拓扑与数据策略
-  □ 2.3 定义 mock / stub / real dependency 策略
-  □ 2.4 定义可观测性与验证方式
+  □ 2.2 定义阶段化执行规则
+  □ 2.3 定义环境拓扑与数据策略
+  □ 2.4 定义 mock / stub / real dependency 策略
+  □ 2.5 定义可观测性与验证方式
 
 □ Phase 3: 门禁与自动化策略
   □ 3.1 定义入口标准
@@ -108,6 +114,7 @@ writer 至少要做到：
 3. 读取文档并提取：
    - 业务目标、关键用户旅程、验收标准
    - API/事件边界、兼容性要求、错误语义
+   - 批准 API Contract 的验证点清单（接口组、字段、状态码、错误语义、权限、幂等/重试、兼容语义）
    - 架构拓扑、关键依赖、可靠性/安全要求
    - Guardrails 中的强制测试约束
 4. 输出「上下文收集报告」，列出已确认基线、关键风险、缺失信息
@@ -147,17 +154,28 @@ writer 至少要做到：
    - Regression
    - Compatibility
    - Non-functional（性能/安全/容量/恢复）
-2. 定义每层关注点、入口条件、主要 owner、失败后的处理方式
-3. 单独列出**开发内建验证前置条件**：
+2. 定义每层关注点、入口条件、主要 owner、失败后的处理方式，并明确哪些 API Contract 验证点由 QA 在该层承担黑盒验证
+3. 定义**阶段化执行规则**，至少明确：
+   - 当前策略覆盖哪些测试阶段（例如：开发内建验证阶段、独立测试设计/本地聚合验证阶段、Shared Test / SIT 阶段、Pre-prod / 发布门禁阶段）
+   - 哪些测试项在当前阶段**不应执行**
+   - 哪些测试项属于后续阶段的硬门禁，当前若环境未就绪应标记为 `Blocked` / `Deferred`，而不是误记为功能失败
+   - 环境只是推荐执行面、能力边界和证据来源；同一阶段允许存在多个可接受环境，只要能满足该阶段的验证能力
+4. 单独列出**API Contract 验证策略**：
+   - 默认假设开发只交付实现与批准版 API Contract，不默认已完成契约验证
+   - QA 对批准 API Contract 的黑盒验证与回归负责，至少覆盖路径/方法/参数/headers/请求响应字段/状态码/错误语义/权限/幂等/兼容语义
+   - 需要明确接口组、验证点清单、主执行层、证据要求与漂移判定方式
+   - 若开发/SDET 提供 provider-side contract suite、调用脚本或样例，只作为补充证据，不替代 QA 契约验证结论
+5. 单独列出**开发内建验证前置条件**：
    - unit test 由开发负责
    - code-level integration test 由开发负责
-   - provider-side contract test 由开发/SDET 负责
-   - 本策略只记录这些前置条件是否应存在，不设计其测试包
-4. 明确环境策略：
+   - 不得把“开发已完成 API Contract 验证”写成默认硬入口条件
+   - 若存在 provider-side contract suite，可记录其状态，但只能作为补充证据
+6. 明确环境策略：
    - 本地 / CI / Shared Test / Staging / Pre-prod
    - 数据准备、数据隔离、数据清理
    - mock / stub / sandbox / real dependency 使用边界
-5. 明确可观测性与验证方式：
+   - 必须明确“环境 ≠ 阶段”：不能只用环境名称代替执行阶段；应写成“某阶段推荐或要求具备哪些环境能力”
+7. 明确可观测性与验证方式：
    - 接口响应 / 事件落地 / DB 状态 / 日志 / 指标 / Trace
 
 ---
@@ -170,10 +188,13 @@ writer 至少要做到：
    - 基线版本是否冻结
    - 环境和数据是否可用
    - 关键依赖是否就绪
+   - 不以“开发已完成 provider-side contract test”作为默认硬入口；若存在其结果，只能作为补充参考
 2. 定义出口标准：
    - 必测范围完成度
    - P0/P1 缺陷门槛
    - 必需证据是否齐备
+   - 批准 API Contract 的 in-scope 验证点必须有 QA 黑盒验证范围、执行层、证据要求与漂移判定标准
+   - 必须区分“当前阶段应完成的出口”与“后续阶段预留的环境级门禁”，避免把后续阶段测试错误地折算成当前阶段失败
 3. 定义自动化优先级：
    - Smoke
    - Critical regression
@@ -189,13 +210,15 @@ writer 至少要做到：
 
 1. 检查每个高风险需求/接口/架构决策是否有对应独立测试层
 2. 检查环境、数据、依赖策略是否现实可行
-3. 检查是否误把开发内建验证写成测试团队负责范围；如有，回收为前置条件
-4. 检查是否误写成详细测试步骤；如有，回收为策略级表达
-5. 使用 `references/strategy-template.md` 输出最终文档，并补齐 `TRACEABILITY-METADATA` block
-6. 对已保存的文档执行：
+3. 检查是否把环境错误写成阶段替代物；如有，回收到“阶段硬约束 + 环境软边界”的表达
+4. 检查是否误把 API Contract 验证降级为开发前置条件；如有，回收到 QA 独立测试范围
+5. 检查是否误把开发内建验证写成测试团队负责范围；如有，回收为前置条件
+6. 检查是否误写成详细测试步骤；如有，回收为策略级表达
+7. 使用 `references/strategy-template.md` 输出最终文档，并补齐 `TRACEABILITY-METADATA` block
+8. 对已保存的文档执行：
    - `python3 plugins/testany-eng/scripts/trace_lint.py --format json <Test Strategy 路径>`
    - `python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <PRD 路径> <Test Strategy 路径>`
-7. 若 `trace-lint` 存在 blocking issue，或 `trace-build-rtm` 出现 unresolved target / duplicate ID / unresolved relation.from，则必须先修正文档后再输出完成结论
+9. 若 `trace-lint` 存在 blocking issue，或 `trace-build-rtm` 出现 unresolved target / duplicate ID / unresolved relation.from，则必须先修正文档后再输出完成结论
 
 ## 交互规范
 
@@ -222,6 +245,8 @@ writer 至少要做到：
 - 上下文收集报告
 - 质量风险清单
 - 独立测试层分配矩阵
+- API Contract 验证策略
+- 阶段化执行规则（至少区分当前阶段与后续阶段门禁）
 - 环境/数据/依赖策略
 - 入口/出口标准
 - 自动化与回归策略
@@ -232,7 +257,9 @@ writer 至少要做到：
 
 - 风险与测试层分配可追溯
 - 关键能力与关键接口无遗漏
+- 不默认假设开发/SDET 已完成 API Contract 验证；QA 契约验证责任边界与漂移判定方式清晰
 - 环境与依赖策略可执行
+- 明确区分阶段硬约束与环境软边界，不把环境名称当作阶段定义
 - 不侵入开发内建质量层职责
 - 不越界到详细 test case
 - `trace-lint` 通过，且在提供 PRD 时 `trace-build-rtm` 无 build error

@@ -13,16 +13,18 @@
 - `TRACEABILITY-METADATA` block 是否存在且 profile = `test-spec-profile-v1`
 - 是否标明 PRD / API / HLD / LLD / Test Strategy 基线
 - In-scope 需求、接口、风险是否有追溯项
+- 批准 API Contract 的 in-scope 验证点是否有追溯项
 - 覆盖率口径是否明确为“测试设计覆盖率”
 - 是否分项统计覆盖率，而非单一总覆盖率
 - 分母与排除项是否写清楚
 - Out-of-scope、豁免、待确认项是否记录
-- 是否记录开发内建验证前置条件
+- 是否记录开发内建验证前置条件，且未把 QA API Contract 验证排除出本包范围
 
 ## Gate 2：覆盖与漂移
 
 - `trace-build-rtm` 的 Requirement / Risk / Must-not-regress / External Behavior 矩阵是否与正文统计一致
 - In-scope 需求覆盖率是否为 100%
+- API Contract 覆盖率是否为 100%，高风险契约点是否无遗漏
 - 高风险覆盖率是否为 100%
 - Must-not-regress 覆盖率是否为 100%
 - 必测 NFR 覆盖率是否为 100%
@@ -31,6 +33,7 @@
 - 主流程、分支、异常、边界是否覆盖
 - must-not-regress 是否被回归包覆盖
 - 系统集成与兼容性验证是否承接 API Contract 的外部行为基线
+- API Contract 黑盒验证是否覆盖正向、负向、边界、权限、错误语义与幂等/兼容验证点
 - 非功能必测项是否承接 Strategy
 - 是否存在无来源依据的测试目标或行为假设
 
@@ -38,6 +41,7 @@
 
 - 每个 case 是否有前置条件、数据、步骤、预期、断言、清理
 - 环境、依赖、观测与证据要求是否完整
+- API Contract 漂移判定所需证据是否完整
 - Smoke / Regression / Compatibility 分组是否明确
 - 自动化建议是否与风险匹配
 

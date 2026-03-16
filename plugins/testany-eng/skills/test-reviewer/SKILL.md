@@ -12,12 +12,12 @@ description: 'Review test design and readiness, 测试评审。Use when: Test Sp
 **你既审“独立测试设计是否成立”，也审“已有执行证据是否足够支撑放行”。**
 
 - ✅ 审查追溯、覆盖、环境/数据/依赖、证据要求
-- ✅ 审查开发内建验证是否被正确记录为前置条件
+- ✅ 审查开发内建验证前置条件与 QA API Contract 验证边界是否正确
 - ✅ 审查执行结果、缺陷状态、豁免与残余风险（如果已提供）
 - ✅ 给出通过/不通过结论
 - ❌ 不代写 test package
 - ❌ 不替发布负责人做业务决策
-- ❌ 不对 unit、code-level integration、provider-side contract 的详细设计与实现负责
+- ❌ 不对 unit、code-level integration 或 provider-side contract harness 的详细设计与实现负责
 
 ## 核心原则
 
@@ -25,6 +25,7 @@ description: 'Review test design and readiness, 测试评审。Use when: Test Sp
 |------|------|
 | **证据优先** | 没有文档或执行证据支撑的结论不成立 |
 | **追溯强制** | 先看需求/契约/设计/风险是否被覆盖 |
+| **契约不假定一致** | 不默认实现与 API Contract 自动一致，测试包必须给出 QA 契约验证覆盖与漂移判定证据 |
 | **风险驱动** | 高风险遗漏、关键缺陷、关键证据缺失优先处理 |
 | **模式明确** | 先分清是“设计准备评审”还是“发布前测试门禁” |
 | **不放水** | P0/P1 问题未清零，不通过 |
@@ -125,10 +126,11 @@ python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <PRD 路径
 - `TRACEABILITY-METADATA` block 是否存在且满足 `test-spec-profile-v1`（缺失/不合法 → P0）
 - PRD/API/HLD/LLD/Test Strategy 基线引用是否明确（缺失 → P0）
 - In-scope 需求、接口、关键风险是否可追溯（以 `trace-build-rtm` 为主证据；缺失 → P0）
+- 批准 API Contract 的 in-scope 验证点是否有追溯项（缺失 → P0）
 - 覆盖率口径是否为“测试设计覆盖率”，且分项统计而非单一总分（错误 → P1）
 - 覆盖率分母与排除项是否写清楚（缺失 → P1）
 - Out-of-scope 与豁免项是否显式记录（缺失 → P1）
-- 开发内建验证是否被明确记录为前置条件，而非本测试包范围（缺失 → P2）
+- 开发内建验证是否被明确记录为前置条件，且未把 QA API Contract 验证错误排除出本测试包范围（缺失/错误 → P1）
 
 ---
 
@@ -138,11 +140,13 @@ python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <PRD 路径
 
 **检查项**：
 - In-scope 需求覆盖率是否达到 `100%`；若未达到，是否有批准豁免或明确处理计划（优先以 `trace-build-rtm` summary/matrix 判断，否则 → P1）
+- API Contract 覆盖率是否达到 `100%`，且高风险契约点无遗漏（否则 → P0）
 - 高风险覆盖率是否达到 `100%`（优先以 `trace-build-rtm` 风险矩阵判断，否则 → P0）
 - Must-not-regress 覆盖率是否达到 `100%`（优先以 `trace-build-rtm` must-not-regress 矩阵判断，否则 → P0）
 - 必测 NFR 覆盖率是否达到 `100%`（否则 → P0）
 - 主流程、关键分支、异常流、边界条件是否覆盖（缺失 → P1）
 - 系统集成/回归/兼容范围是否覆盖 must-not-regress（结合 `trace-build-rtm` 与正文分组判断；缺失 → P1）
+- API Contract 黑盒验证是否覆盖正向、负向、边界、权限、错误语义与幂等/兼容验证点（缺失 → P1）
 - 外部行为覆盖率与场景覆盖率是否已统计，并列出未覆盖项（缺失 → P1）
 - 是否新增无来源依据的测试目标或错误行为假设（漂移 → P1）
 - 非功能高风险点若在 Strategy 中列为必测但 package 未承接（缺失 → P0）
@@ -157,6 +161,7 @@ python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <PRD 路径
 - 前置条件、数据准备、依赖策略是否完整（缺失 → P1）
 - 预期结果、断言点、清理动作是否清晰（缺失 → P1）
 - 证据要求是否足以支持后续判断（缺失 → P1）
+- API Contract 漂移判定所需的响应样本、错误样本、权限/幂等等证据要求是否完整（缺失 → P1）
 - Smoke / Regression / Compatibility 分组是否明确（缺失 → P2）
 
 ---

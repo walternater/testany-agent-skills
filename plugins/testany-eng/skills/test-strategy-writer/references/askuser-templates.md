@@ -46,3 +46,33 @@ options:
   - label: "Mock / Stub 优先"
     description: "便于覆盖异常与边界，但需补真实联调"
 ```
+
+## 4. 阶段边界确认
+
+```yaml
+question: "当前这轮测试策略，主要要为哪个测试阶段建立门禁？"
+header: "测试阶段"
+multiSelect: false
+options:
+  - label: "当前节点只定义本地/聚合验证阶段"
+    description: "先收口当前阶段必须做的测试，后续环境级门禁单独列为下一阶段"
+  - label: "当前节点覆盖到 Shared Test / SIT 阶段"
+    description: "需要把共享测试环境下的门禁也一并纳入当前策略"
+  - label: "当前节点直接覆盖到 Pre-prod / 发布门禁阶段"
+    description: "当前策略需要明确发布前必须完成的环境级验证"
+```
+
+## 5. 环境弹性确认
+
+```yaml
+question: "同一测试阶段是否允许多个环境作为等价执行面？"
+header: "环境弹性"
+multiSelect: false
+options:
+  - label: "允许，只要满足该阶段能力要求"
+    description: "环境是能力载体，不和阶段强绑定"
+  - label: "不允许，必须固定在指定环境"
+    description: "该阶段只接受唯一环境，便于统一证据和门禁"
+  - label: "部分允许，关键门禁仍需固定环境"
+    description: "基础验证可灵活，发布前关键门禁要求指定环境"
+```

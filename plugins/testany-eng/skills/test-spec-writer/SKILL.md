@@ -16,7 +16,7 @@ description: 'Write test spec, 测试规格/测试用例包撰写。Use when: LL
 | **追溯强制** | In-scope 需求、接口、架构决策、关键风险必须可追溯到测试项 |
 | **执行就绪** | 每个测试项都应具备前置条件、数据、依赖、判定方式 |
 | **边界克制** | 不输出测试结果，不代替发布准出 |
-| **边界清晰** | 不产出 unit、code-level integration、provider-side contract 的详细 case；这些只作为上游前置条件记录 |
+| **边界清晰** | unit、code-level integration 只作为上游前置条件；批准 API Contract 的黑盒验证必须在 test case package 中展开。若存在 provider-side contract suite，仅作为补充证据，不能替代 QA 结论 |
 | **覆盖率分项统计** | 覆盖率必须按需求/风险/外部行为/场景/NFR 分项统计，不允许用单一总百分比代替 |
 | **元数据强制** | 输出必须包含符合 `test-spec-profile-v1` 的 `TRACEABILITY-METADATA` block，并通过脚本校验 |
 
@@ -28,6 +28,7 @@ description: 'Write test spec, 测试规格/测试用例包撰写。Use when: LL
 - 追溯矩阵
 - 覆盖率摘要与未覆盖项清单
 - 测试矩阵（按层次/场景/风险分组）
+- API Contract 验证矩阵、覆盖摘要与详细 case
 - 详细测试用例
 - 环境、数据、依赖、观测与证据要求
 - 回归包、Smoke 包、执行顺序建议
@@ -40,7 +41,8 @@ description: 'Write test spec, 测试规格/测试用例包撰写。Use when: LL
 - 高层测试策略重写
 - 测试执行结果或缺陷报告
 - 发布 Go/No-Go 结论
-- unit、code-level integration、provider-side contract 的详细测试设计
+- unit、code-level integration 的详细测试设计
+- provider-side contract harness / 白盒契约自动化的实现设计
 
 ## Traceability Metadata（强制）
 
@@ -119,6 +121,7 @@ writer 至少要做到：
 3. 提取：
    - 关键需求与验收标准
    - 接口/事件/错误契约
+   - 批准 API Contract 的验证点清单（接口、字段、状态码、错误语义、权限、幂等/重试、兼容语义）
    - 模块边界、状态流、错误处理、并发/事务细节
    - Test Strategy 中的测试层次、环境与门禁
 4. 输出「上下文收集报告」，列出已确认基线、待确认项、可复用测试资产
@@ -131,6 +134,7 @@ writer 至少要做到：
 
 1. 按 `references/test-package-template.md` 建立 package 结构
 2. 定义统一的测试项编号规则，例如：
+   - `API-*`
    - `SYS-*`
    - `E2E-*`
    - `REG-*`
@@ -138,11 +142,13 @@ writer 至少要做到：
    - `NFT-*`
 3. 建立追溯矩阵：
    - PRD 需求 → 测试项
+   - 批准 API Contract 验证点 → 测试项
    - API/事件契约 → 测试项
    - HLD/LLD 关键设计决策 → 测试项
    - Test Strategy 风险 → 测试项
 4. 明确覆盖率统计分母，仅包含：
    - In-scope 需求
+   - In-scope API Contract 验证点
    - In-scope 风险
    - In-scope 外部可观察行为
    - 已识别场景
@@ -150,7 +156,7 @@ writer 至少要做到：
 5. 明确覆盖率统计排除项：
    - Out-of-scope
    - 已批准豁免项
-   - unit / code-level integration / provider-side contract
+   - unit / code-level integration
    - 已明确由其他独立测试包承担且已引用的项
 6. 同步建立 metadata 追溯骨架：
    - 将详细测试项写入 `entities.test_cases`
@@ -164,6 +170,7 @@ writer 至少要做到：
 **目标**：定义测什么，以及分别放在哪一层测。
 
 1. 基于需求与设计拆出**独立测试矩阵**：
+   - API Contract 正向/负向/边界/兼容验证
    - 主流程
    - 关键分支
    - 异常流
@@ -179,8 +186,9 @@ writer 至少要做到：
    - 自动化候选级别
 3. 定义环境、数据、依赖、观测与证据规则
 4. 单独记录开发内建验证前置条件：
-   - 需要哪些 unit / code-level integration / provider-side contract 作为前置保障
-   - 这些内容不展开为 test case package
+   - 需要哪些 unit / code-level integration 作为前置保障
+   - 批准 API Contract 的黑盒验证必须展开为 test case package，不得仅作为前置条件引用
+   - 若开发/SDET 提供 provider-side contract suite 或调用脚本，仅记录为补充证据
 
 ---
 
@@ -220,16 +228,17 @@ writer 至少要做到：
 
 1. 统计并输出覆盖率摘要：
    - 需求覆盖率
+   - API Contract 覆盖率
    - 风险覆盖率
    - 高风险覆盖率
    - Must-not-regress 覆盖率
    - 外部行为覆盖率
    - 场景覆盖率
    - 必测 NFR 覆盖率
-2. 检查 In-scope 需求、关键接口、关键风险是否 100% 追溯到独立测试项
+2. 检查 In-scope 需求、批准 API Contract 验证点、关键接口、关键风险是否 100% 追溯到独立测试项
 3. 检查是否新增了无来源依据的测试目标；如有，标记为待确认
 4. 检查每个 case 是否具备可执行前置条件、数据、依赖、判定方式
-5. 检查是否误把开发内建验证写成测试团队详细 case；如有，回收为前置条件
+5. 检查是否误把 API Contract 验证降级为前置条件，或仅引用开发自测代替详细 case；如有，补回 package
 6. 使用 `references/test-package-template.md` 输出最终文档
 7. 对已保存的文档执行：
    - `python3 plugins/testany-eng/scripts/trace_lint.py --format json <Test Spec 路径>`
@@ -245,16 +254,26 @@ writer 至少要做到：
 1. **需求覆盖率**  
    口径：`已被至少 1 个测试项追溯的 in-scope 需求数 / in-scope 需求总数`
 
-2. **风险覆盖率**  
+2. **API Contract 覆盖率**  
+   口径：`已被至少 1 个测试项覆盖的 in-scope API Contract 验证点数 / in-scope API Contract 验证点总数`
+
+   验证点至少包括：
+   - 接口 / 操作（`path + method`）
+   - 必填参数、headers 与权限边界
+   - 请求/响应必填字段、字段类型、枚举与默认语义
+   - 状态码、错误码、错误响应体与错误引用语义
+   - 幂等、重试、兼容/回退相关 contract 条款
+
+3. **风险覆盖率**  
    口径：`已被至少 1 个测试项覆盖的 in-scope 风险数 / in-scope 风险总数`
 
-3. **高风险覆盖率**  
+4. **高风险覆盖率**  
    口径：`已被覆盖的高风险项数 / 高风险项总数`
 
-4. **Must-not-regress 覆盖率**  
+5. **Must-not-regress 覆盖率**  
    口径：`已被回归包覆盖的 must-not-regress 项数 / must-not-regress 项总数`
 
-5. **外部行为覆盖率**  
+6. **外部行为覆盖率**  
    口径：`已被测试项覆盖的 in-scope 外部可观察行为数 / in-scope 外部可观察行为总数`
    
    外部行为包括：
@@ -264,7 +283,7 @@ writer 至少要做到：
    - 兼容性行为
    - 恢复/回滚行为
 
-6. **场景覆盖率**  
+7. **场景覆盖率**  
    口径：`已覆盖场景数 / 已识别场景总数`
 
    场景至少包含：
@@ -276,7 +295,7 @@ writer 至少要做到：
    - 兼容回归
    - 非功能验证
 
-7. **必测 NFR 覆盖率**  
+8. **必测 NFR 覆盖率**  
    口径：`已设计验证方案的必测 NFR 项数 / 必测 NFR 项总数`
 
 ### 统计排除项
@@ -287,12 +306,12 @@ writer 至少要做到：
 - 已批准豁免项
 - unit test
 - code-level integration test
-- provider-side contract test
 - 已明确由其他独立测试包承担且已引用的项
 
 ### 默认门槛建议
 
 - In-scope 需求覆盖率：目标 `100%`
+- API Contract 覆盖率：目标 `100%`
 - 高风险覆盖率：必须 `100%`
 - Must-not-regress 覆盖率：必须 `100%`
 - 必测 NFR 覆盖率：必须 `100%`
@@ -328,6 +347,7 @@ writer 至少要做到：
 - `TRACEABILITY-METADATA` block（`test-spec-profile-v1`）
 - 追溯矩阵
 - 覆盖率摘要
+- API Contract 覆盖率摘要与验证矩阵
 - 测试矩阵
 - 详细测试用例
 - 环境/数据/依赖与证据要求
@@ -338,6 +358,7 @@ writer 至少要做到：
 ## 质量标准
 
 - In-scope 需求、接口、关键风险无关键遗漏
+- 批准 API Contract 的 in-scope 验证点 100% 追溯到 QA 测试项
 - 覆盖率口径统一且分母可追溯
 - 不以单一综合覆盖率替代分项覆盖率
 - 不与 PRD/API/HLD/LLD/Test Strategy 漂移

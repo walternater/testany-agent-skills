@@ -49,11 +49,16 @@ waivers: []
 ### Out-of-scope
 - {内容}
 
+### API Contract 验证范围
+- **责任边界**：QA 主责批准 API Contract 的黑盒验证与回归；若开发/SDET 提供 provider-side contract suite，仅作为补充证据
+- **验证点清单**：{接口组 / 操作 / 验证点}
+- **覆盖维度**：{路径/方法/参数/headers/请求字段/响应字段/状态码/错误语义/权限/幂等/兼容语义}
+
 ### 开发内建验证前置条件
 - **Unit Test**：{要求/状态}
 - **Code-level Integration Test**：{要求/状态}
-- **Provider-side Contract Test**：{要求/状态}
-- **说明**：以上内容仅记录为上游前置条件，不在本测试包中展开详细 case
+- **可选补充证据**：provider-side contract suite / 调用脚本：{要求/状态}
+- **说明**：批准 API Contract 的黑盒验证属于本测试包 In-scope，不得仅作为上游前置条件排除
 
 ## 追溯矩阵
 
@@ -66,6 +71,7 @@ waivers: []
 | 指标 | 分子定义 | 分母定义 | 覆盖率 | 未覆盖项 |
 |------|----------|----------|--------|----------|
 | 需求覆盖率 | 已被至少 1 个测试项追溯的 in-scope 需求数 | in-scope 需求总数 | {x/y = z%} | {ID 列表 / 无} |
+| API Contract 覆盖率 | 已被至少 1 个测试项覆盖的 in-scope API Contract 验证点数 | in-scope API Contract 验证点总数 | {x/y = z%} | {验证点列表 / 无} |
 | 风险覆盖率 | 已被至少 1 个测试项覆盖的 in-scope 风险数 | in-scope 风险总数 | {x/y = z%} | {ID 列表 / 无} |
 | 高风险覆盖率 | 已被覆盖的高风险项数 | 高风险项总数 | {x/y = z%} | {ID 列表 / 无} |
 | Must-not-regress 覆盖率 | 已被回归包覆盖的 must-not-regress 项数 | must-not-regress 项总数 | {x/y = z%} | {ID 列表 / 无} |
@@ -80,7 +86,7 @@ waivers: []
 - 以下内容不进入分母：
   - Out-of-scope
   - 已批准豁免项
-  - unit / code-level integration / provider-side contract
+  - unit / code-level integration
   - 已明确由其他独立测试包承担且已引用的项
 - 不允许只给一个综合总覆盖率，必须分项展示
 
@@ -88,7 +94,7 @@ waivers: []
 
 | 场景组 | 测试层次 | 优先级 | 必测 | 自动化候选 | 备注 |
 |--------|----------|--------|------|------------|------|
-| 主流程 / 分支 / 异常 / 边界 / 系统集成 / 兼容 / 非功能 | SYS / E2E / REG / COMPAT / NFT | P0 / P1 / P2 | 是/否 | 高/中/低 | {说明} |
+| API 契约 / 主流程 / 分支 / 异常 / 边界 / 系统集成 / 兼容 / 非功能 | API / SYS / E2E / REG / COMPAT / NFT | P0 / P1 / P2 | 是/否 | 高/中/低 | {说明} |
 
 ## 详细测试用例
 
@@ -125,6 +131,9 @@ waivers: []
 ## 回归与执行建议
 
 ### Smoke
+- {Case ID}
+
+### API Contract Regression
 - {Case ID}
 
 ### Critical Regression
