@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo:*)",
+      "Bash(gh issue:*)",
+      "Bash(python plugins/testany-llm/skills/skill-creator/scripts/init_skill.py prototype-designer --path plugins/testany-eng/skills/)",
+      "Bash(python3 plugins/testany-llm/skills/skill-creator/scripts/init_skill.py prototype-designer --path plugins/testany-eng/skills/)",
+      "Bash(python3 plugins/testany-llm/skills/skill-creator/scripts/quick_validate.py plugins/testany-eng/skills/prototype-designer)"
+    ]
+  }
+}
