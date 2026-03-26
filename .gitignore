@@ -35,3 +35,13 @@ plugins/testany-bot-for-claude/
 *.backup.*
 
 .history
+
+# Claude Code local state
+.claude/
+
+# Test cache
+.pytest_cache/
+
+# Bundled JS artifacts (should not be committed)
+deeplinks-*.js
+main-*.js
