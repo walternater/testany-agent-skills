@@ -59,7 +59,7 @@ writer 至少要做到：
 - 输出稳定的 `CASE-*`
 - `artifact.source_documents` 至少写入 PRD / Test Strategy / LLD 的 artifact ID；如实际使用 API/HLD/Guardrails，也一并写入
 - 每个 `CASE-*` 至少拥有 1 条 outgoing relation，类型为 `verifies` 或 `mitigates`
-- `relation.to` 优先指向 `REQ-*`、`RISK-*`、`MR-*`、`BEH-*`
+- `relation.to` 优先指向 `REQ-*`、`RISK-*`、`MR-*`、`BEH-*`；当 HLD/LLD 包含 traceability 元数据时，也可指向 `DEC-*`（验证架构决策）或 `FLOW-*`（验证关键流程）
 - 文档写入文件后，必须执行 `trace-lint`；并使用 `trace-build-rtm` 联合 PRD/Test Strategy 做全局追溯检查
 
 ---

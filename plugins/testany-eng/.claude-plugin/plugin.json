@@ -1,6 +1,6 @@
 {
   "name": "testany-eng",
-  "description": "Testany 研发流程工具集：BRD、PRD、API、HLD、LLD、Test、Runbook",
+  "description": "Testany 研发流程工具集：BRD、UC、PRD、Prototype、API、Guardrails、HLD、LLD、Test、Runbook",
   "author": {
     "name": "Testany",
     "email": "engineering@testany.io"

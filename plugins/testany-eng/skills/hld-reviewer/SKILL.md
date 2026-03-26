@@ -201,6 +201,21 @@ description: 'HLD review, High-Level Design review, 技术方案评审。Use whe
 
 **这是最重要的检查，必须逐条验证。**
 
+#### 0. Traceability Metadata 校验（先于内容审查）
+
+在开始内容级审查之前，先验证 HLD 的追溯元数据结构完整性：
+
+- [ ] HLD 是否包含 `TRACEABILITY-METADATA` block？
+  - 缺失 → **P1**（文档质量缺陷，继续后续审查）
+- [ ] 若 block 存在，执行 `python3 plugins/testany-eng/scripts/trace_lint.py --format json <HLD 路径>`
+  - 存在 error → **P0 阻塞**（trace-lint blocking issue）
+  - 存在 warning → **P1**
+- [ ] 若 PRD 路径可用，执行 `python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <PRD 路径> <HLD 路径>`
+  - RTM001-RTM004 级别 issue → **P0**
+  - PRD 中 in-scope 的 `REQ-*` 存在 `requirements_uncovered > 0` → **P1**（PRD 需求未被任何 HLD DEC-*/FLOW-* 引用）
+
+> **说明**：TRACEABILITY-METADATA block 缺失统一记为 P1 而非 P0，因为旧版 HLD 可能在此功能上线前产出。但 block 存在时，其内容必须通过 trace-lint 校验（error → P0）。PRD 需求未被引用（uncovered）也记为 P1——这正是 #11 要修复的核心缺口。
+
 详细检查指南见：`references/drift-detection-guide.md`
 
 **检查项：**

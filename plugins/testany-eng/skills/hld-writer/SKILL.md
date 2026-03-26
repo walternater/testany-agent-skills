@@ -312,6 +312,7 @@ options:
   □ 4.4 契约一致性检查（HLD 接口引用与 API Contract 一致）
   □ 4.5 可落地检查
   □ 4.6 证据检查
+  □ 4.7 Traceability Metadata 生成与校验
 ```
 
 ---
@@ -501,6 +502,30 @@ options:
 - [ ] 上下文收集报告是否已输出？（应该；注：报告本身无需用户确认，文档选择已在 0.2 确认过）
 
 **如果发现无依据的猜测性内容，必须删除或通过 AskUserQuestion 确认。**
+
+#### 4.6 Traceability Metadata（强制）
+
+产出的 HLD 必须内嵌 `TRACEABILITY-METADATA` block（格式见 `../../references/traceability-schema/traceability-schema-v1.md` §11）。
+
+**要求：**
+- `schema.profile` = `hld-profile-v1`
+- `artifact.type` = `HLD`
+- `artifact.source_documents` 至少包含 PRD 和 API Contract 的 artifact ID
+- `entities.decisions[]` 为每个架构决策建模（`DEC-*`），包含 `decision` 和 `rationale`
+- `entities.flows[]` 为关键系统流程建模（`FLOW-*`），标注 `kind`
+- 其余桶（requirements/risks/must_not_regress/external_behaviors/test_cases）保留空数组
+- `relations[]` 使用 `refines` 将每个 `DEC-*`/`FLOW-*` 连回 `REQ-*`
+
+参考示例：`../../references/traceability-schema/hld-profile-v1.example.yaml`
+
+**校验（写入文件后执行）：**
+```bash
+python3 plugins/testany-eng/scripts/trace_lint.py --format json <HLD 路径>
+```
+若存在 blocking issue（error），必须修正后再输出完成结论。若 PRD 路径可用，额外执行：
+```bash
+python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <PRD 路径> <HLD 路径>
+```
 
 ## 交互规范
 

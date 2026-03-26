@@ -71,7 +71,8 @@ description: 'Write LLD, Low-Level Design, 写详细设计。Use when: PRD/HLD/A
   □ 3.3 Contract 一致性检查
   □ 3.4 Guardrails 强制项检查
   □ 3.5 复用清单检查
-  □ 3.6 输出自检报告
+  □ 3.6 Traceability Metadata 生成与校验
+  □ 3.7 输出自检报告
 ```
 
 ---
@@ -127,6 +128,17 @@ description: 'Write LLD, Low-Level Design, 写详细设计。Use when: PRD/HLD/A
 | Contract 一致 | 禁止重定义接口 | P0 |
 | Guardrails 覆盖 | 强制项全覆盖 | P0 |
 | 复用检查 | 无重复造轮子 | P2 |
+
+**Traceability Metadata（强制）**：
+
+LLD 必须内嵌 `TRACEABILITY-METADATA` block（`lld-profile-v1`）。要求：
+- `artifact.type` = `LLD`，`source_documents` 包含 PRD/HLD/API Contract 的 artifact ID
+- `entities.decisions[]` 为模块级决策建模（`DEC-*`），`entities.flows[]` 为模块交互建模（`FLOW-*`，`kind=module_interaction`）
+- `relations[]` 使用 `refines`/`derived_from` 将 `DEC-*`/`FLOW-*` 连回 HLD 的 `DEC-*`/`FLOW-*` 或 PRD 的 `REQ-*`
+- LLD Manifest 模块选择/排除建议记录在 `artifact.notes` 中
+- 参考示例：`../../references/traceability-schema/lld-profile-v1.example.yaml`
+
+写入文件后执行：`python3 plugins/testany-eng/scripts/trace_lint.py --format json <LLD 路径>`。blocking issue 必须修正。
 
 **输出**：「自检报告」（格式见 `references/output-templates.md`）
 

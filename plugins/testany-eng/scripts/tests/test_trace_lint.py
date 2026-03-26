@@ -415,5 +415,214 @@ class TraceLintCliTests(unittest.TestCase):
         self.assertIn("TRACE604", result.stdout)
 
 
+    # ── HLD profile tests ──
+
+    def test_valid_hld_profile_passes(self) -> None:
+        """hld-profile-v1 example YAML should pass lint."""
+        example = Path(__file__).resolve().parents[2] / "references" / "traceability-schema" / "hld-profile-v1.example.yaml"
+        if not example.exists():
+            self.skipTest("hld-profile-v1.example.yaml not found")
+        result = self.run_cli(str(example))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("TRACE-LINT RESULT: PASS", result.stdout)
+
+    def test_hld_profile_requires_decision_or_flow(self) -> None:
+        """hld-profile-v1 with empty decisions and flows should fail."""
+        metadata = textwrap.dedent("""\
+        schema:
+          name: testany-traceability
+          version: "1.0.0"
+          profile: hld-profile-v1
+        artifact:
+          id: HLD-TEST-001
+          type: HLD
+          title: test
+          status: draft
+          owners: [test]
+          created_at: 2026-01-01
+          updated_at: 2026-01-01
+          source_documents: [PRD-TEST-001]
+        entities:
+          requirements: []
+          risks: []
+          must_not_regress: []
+          external_behaviors: []
+          decisions: []
+          flows: []
+          test_cases: []
+        relations: []
+        waivers: []
+        """)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "hld-empty.yaml"
+            path.write_text(metadata, encoding="utf-8")
+            result = self.run_cli(str(path))
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("TRACE606", result.stdout)
+
+    def test_hld_profile_rejects_invalid_target(self) -> None:
+        """hld-profile-v1 with CASE-* as relation target should fail."""
+        metadata = textwrap.dedent("""\
+        schema:
+          name: testany-traceability
+          version: "1.0.0"
+          profile: hld-profile-v1
+        artifact:
+          id: HLD-TEST-001
+          type: HLD
+          title: test
+          status: draft
+          owners: [test]
+          created_at: 2026-01-01
+          updated_at: 2026-01-01
+          source_documents: [PRD-TEST-001]
+        entities:
+          requirements: []
+          risks: []
+          must_not_regress: []
+          external_behaviors: []
+          decisions:
+            - id: DEC-TEST-001
+              title: test decision
+              statement: test
+              status: proposed
+              scope: in
+              decision: test
+              rationale: test
+          flows: []
+          test_cases: []
+        relations:
+          - id: REL-TEST-001
+            type: refines
+            from: DEC-TEST-001
+            to: CASE-TEST-001
+            status: active
+        waivers: []
+        """)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "hld-bad-target.yaml"
+            path.write_text(metadata, encoding="utf-8")
+            result = self.run_cli(str(path))
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("TRACE606", result.stdout)
+        self.assertIn("不是预期的上游对象", result.stdout)
+
+    def test_hld_profile_rejects_invalid_flow_target(self) -> None:
+        """hld-profile-v1 with a valid DEC->REQ but invalid FLOW->CASE should fail."""
+        metadata = textwrap.dedent("""\
+        schema:
+          name: testany-traceability
+          version: "1.0.0"
+          profile: hld-profile-v1
+        artifact:
+          id: HLD-TEST-001
+          type: HLD
+          title: test
+          status: draft
+          owners: [test]
+          created_at: 2026-01-01
+          updated_at: 2026-01-01
+          source_documents: [PRD-TEST-001]
+        entities:
+          requirements: []
+          risks: []
+          must_not_regress: []
+          external_behaviors: []
+          decisions:
+            - id: DEC-TEST-001
+              title: valid decision
+              statement: test
+              status: proposed
+              scope: in
+              decision: test
+              rationale: test
+          flows:
+            - id: FLOW-TEST-001
+              title: invalid flow target
+              statement: test
+              status: proposed
+              scope: in
+              kind: system_flow
+          test_cases: []
+        relations:
+          - id: REL-TEST-001
+            type: refines
+            from: DEC-TEST-001
+            to: REQ-TEST-001
+            status: active
+          - id: REL-TEST-002
+            type: refines
+            from: FLOW-TEST-001
+            to: CASE-TEST-001
+            status: active
+        waivers: []
+        """)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "hld-bad-flow-target.yaml"
+            path.write_text(metadata, encoding="utf-8")
+            result = self.run_cli(str(path))
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("TRACE606", result.stdout)
+        self.assertIn("FLOW-TEST-001", result.stdout)
+
+    # ── LLD profile tests ──
+
+    def test_valid_lld_profile_passes(self) -> None:
+        """lld-profile-v1 example YAML should pass lint."""
+        example = Path(__file__).resolve().parents[2] / "references" / "traceability-schema" / "lld-profile-v1.example.yaml"
+        if not example.exists():
+            self.skipTest("lld-profile-v1.example.yaml not found")
+        result = self.run_cli(str(example))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("TRACE-LINT RESULT: PASS", result.stdout)
+
+    def test_lld_profile_rejects_invalid_target(self) -> None:
+        """lld-profile-v1 with CASE-* as relation target should fail."""
+        metadata = textwrap.dedent("""\
+        schema:
+          name: testany-traceability
+          version: "1.0.0"
+          profile: lld-profile-v1
+        artifact:
+          id: LLD-TEST-001
+          type: LLD
+          title: test
+          status: draft
+          owners: [test]
+          created_at: 2026-01-01
+          updated_at: 2026-01-01
+          source_documents: [HLD-TEST-001]
+        entities:
+          requirements: []
+          risks: []
+          must_not_regress: []
+          external_behaviors: []
+          decisions:
+            - id: DEC-TEST-001
+              title: test decision
+              statement: test
+              status: proposed
+              scope: in
+              decision: test
+              rationale: test
+          flows: []
+          test_cases: []
+        relations:
+          - id: REL-TEST-001
+            type: refines
+            from: DEC-TEST-001
+            to: CASE-TEST-001
+            status: active
+        waivers: []
+        """)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "lld-bad-target.yaml"
+            path.write_text(metadata, encoding="utf-8")
+            result = self.run_cli(str(path))
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("TRACE607", result.stdout)
+        self.assertIn("不是预期的上游对象", result.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

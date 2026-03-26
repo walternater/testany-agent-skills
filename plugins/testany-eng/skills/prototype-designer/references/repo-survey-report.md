@@ -53,7 +53,7 @@ Phase 0.5 完成后，必须按此模板输出报告。
 | 包管理器 | [pnpm / npm / yarn / bun] | [lock 文件] |
 | 开发启动 | [pnpm dev / npm run dev / ...] | [package.json scripts] |
 | Lint 检查 | [pnpm lint / npm run lint / ...] | [package.json scripts] |
-| 类型检查 | [pnpm typecheck / pnpm exec tsc --noEmit / 需确认] | [package.json scripts；或 tsconfig + 包管理器 exec；或待 AskUserQuestion] |
+| 类型检查 | [pnpm typecheck / pnpm exec tsc --noEmit / npx tsc --noEmit / 需确认] | [package.json scripts；或 tsconfig + 包管理器 exec（pnpm exec / yarn exec / bunx / npx）；或待 AskUserQuestion] |
 | 工作区定位 | [monorepo 时: 包名或 --filter 参数] | [workspace 配置] |
 
 ### 原型沙箱规划

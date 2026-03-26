@@ -306,7 +306,7 @@ PRD 第一阶段唯一必须落地的实体。
 
 | 字段 | 必填 | 说明 |
 |------|------|------|
-| `kind` | 是 | `user_journey` / `system_flow` / `state_transition` |
+| `kind` | 是 | `user_journey` / `system_flow` / `state_transition` / `module_interaction` |
 
 ### 7.8 `test_cases[]`
 
@@ -485,18 +485,34 @@ PRD 阶段的基础 profile。
   - `MR-*`
   - `BEH-*`
 
-### 10.5 预留 Profile
+### 10.5 `hld-profile-v1`
 
-v1 仍预留但暂不强制实现：
+用于承载高层技术设计的架构决策与关键流程。HLD 是连接需求和实现的关键桥梁，其 profile 确保架构决策可追溯到上游需求。
 
-- `hld-profile-v1`
-- `lld-profile-v1`
+约束：
 
-这些 profile 复用同一 canonical schema，只改变：
+- `artifact.type` 必须为 `HLD`
+- 以下桶必须存在，即使为空数组：`requirements`、`risks`、`must_not_regress`、`external_behaviors`、`decisions`、`flows`、`test_cases`
+- `entities.decisions[]` 每条至少包含：`id`、`title`、`statement`、`status`、`scope`、`decision`、`rationale`
+- `entities.flows[]` 每条至少包含：`id`、`title`、`statement`、`status`、`scope`、`kind`
+- `flows[].kind` 允许值：`user_journey` / `system_flow` / `state_transition`
+- `decisions` 与 `flows` 合计至少应有 **1 条**建模对象
+- 每个 `DEC-*` / `FLOW-*` 至少应有 1 条 outgoing relation（`refines` 或 `derived_from`），指向 `REQ-*` 或上游 artifact ID
 
-- 哪些实体允许出现
-- 哪些字段升级为必填
-- 哪些关系类型必须出现
+### 10.6 `lld-profile-v1`
+
+用于承载低层设计的模块级决策与模块交互流程。LLD 更接近实现层，追溯目标包括 HLD 层的 `DEC-*` / `FLOW-*`。
+
+约束：
+
+- `artifact.type` 必须为 `LLD`
+- 以下桶必须存在，即使为空数组：`requirements`、`risks`、`must_not_regress`、`external_behaviors`、`decisions`、`flows`、`test_cases`
+- `entities.decisions[]` 每条至少包含：`id`、`title`、`statement`、`status`、`scope`、`decision`、`rationale`
+- `entities.flows[]` 每条至少包含：`id`、`title`、`statement`、`status`、`scope`、`kind`
+- `flows[].kind` 允许值：`user_journey` / `system_flow` / `state_transition` / `module_interaction`
+- `decisions` 与 `flows` 合计至少应有 **1 条**建模对象
+- 每个 `DEC-*` / `FLOW-*` 至少应有 1 条 outgoing relation（`refines` 或 `derived_from`），指向 `DEC-*` / `FLOW-*` / `REQ-*` 或上游 artifact ID
+- LLD Manifest（模块选择/排除列表）建议在 `artifact.notes` 或 `entities` 的 `notes` 字段中体现，供下游 test-spec-writer 程序化消费
 
 ## 11. Markdown 内嵌约定
 

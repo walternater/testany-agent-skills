@@ -287,5 +287,132 @@ class TraceBuildRtmCliTests(unittest.TestCase):
         self.assertEqual(payload["lint"]["reports"][0]["summary"]["warnings"], 1)
 
 
+    # ── HLD/LLD RTM integration tests ──
+
+    def test_hld_refines_covers_requirements_and_decisions(self) -> None:
+        """PRD + HLD: refines relations should make DEC/FLOW covered and REQ refined_by."""
+        hld_metadata = """
+schema:
+  name: testany-traceability
+  version: "1.0.0"
+  profile: hld-profile-v1
+artifact:
+  id: HLD-CHECKOUT-001
+  type: HLD
+  title: 优惠券结算技术设计
+  status: draft
+  created_at: 2026-03-08
+  updated_at: 2026-03-08
+  source_documents:
+    - PRD-CHECKOUT-001
+entities:
+  requirements: []
+  risks: []
+  must_not_regress: []
+  external_behaviors: []
+  decisions:
+    - id: DEC-CHECKOUT-001
+      title: gRPC 选型
+      statement: 使用营销服务 gRPC 接口
+      status: proposed
+      scope: in
+      decision: gRPC
+      rationale: 低延迟
+  flows:
+    - id: FLOW-CHECKOUT-001
+      title: 优惠券主流程
+      statement: 校验 → 计算 → 签名
+      status: proposed
+      scope: in
+      kind: system_flow
+  test_cases: []
+relations:
+  - id: REL-HLD-001
+    type: refines
+    from: DEC-CHECKOUT-001
+    to: REQ-CHECKOUT-001
+    status: active
+  - id: REL-HLD-002
+    type: refines
+    from: FLOW-CHECKOUT-001
+    to: REQ-CHECKOUT-001
+    status: active
+waivers: []
+"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            prd = self.write_file(root, "prd.yaml", PRD_METADATA)
+            hld = self.write_file(root, "hld.yaml", hld_metadata)
+
+            result = self.run_cli("--format", "json", str(prd), str(hld))
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        summary = payload["build"]["summary"]
+
+        # DEC and FLOW should be covered (they have outgoing refines)
+        self.assertEqual(summary["decisions_total"], 1)
+        self.assertEqual(summary["decisions_covered"], 1)
+        self.assertEqual(summary["flows_total"], 1)
+        self.assertEqual(summary["flows_covered"], 1)
+
+        # REQ should be covered (it has incoming refines from DEC/FLOW)
+        self.assertEqual(summary["requirements_total"], 1)
+        self.assertEqual(summary["requirements_covered"], 1)
+
+    def test_hld_rtm_markdown_contains_decisions_flows_sections(self) -> None:
+        """PRD + HLD markdown output should contain Decisions Matrix and Flows Matrix."""
+        hld_metadata = """
+schema:
+  name: testany-traceability
+  version: "1.0.0"
+  profile: hld-profile-v1
+artifact:
+  id: HLD-CHECKOUT-001
+  type: HLD
+  title: test
+  status: draft
+  created_at: 2026-03-08
+  updated_at: 2026-03-08
+  source_documents:
+    - PRD-CHECKOUT-001
+entities:
+  requirements: []
+  risks: []
+  must_not_regress: []
+  external_behaviors: []
+  decisions:
+    - id: DEC-CHECKOUT-001
+      title: test decision
+      statement: test
+      status: proposed
+      scope: in
+      decision: test
+      rationale: test
+  flows: []
+  test_cases: []
+relations:
+  - id: REL-HLD-001
+    type: refines
+    from: DEC-CHECKOUT-001
+    to: REQ-CHECKOUT-001
+    status: active
+waivers: []
+"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            prd = self.write_file(root, "prd.yaml", PRD_METADATA)
+            hld = self.write_file(root, "hld.yaml", hld_metadata)
+
+            result = self.run_cli("--format", "markdown", str(prd), str(hld))
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("## Decisions Matrix", result.stdout)
+        self.assertIn("## Flows Matrix", result.stdout)
+        self.assertIn("## Uncovered Decisions", result.stdout)
+        self.assertIn("## Uncovered Flows", result.stdout)
+        self.assertIn("DEC-CHECKOUT-001", result.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

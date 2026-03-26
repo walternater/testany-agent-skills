@@ -13,7 +13,7 @@ Skills 是包含指令、脚本和资源的文件夹，Claude 可以动态加载
 
 | Plugin | 领域 | 命令 |
 |--------|------|------|
-| **testany-eng** | 研发流程 | `/testany-eng:brd-interviewer`, `/testany-eng:uc-interviewer`, `/testany-eng:prd-writer`, `/testany-eng:prd-reviewer`, `/testany-eng:prd-studio`, `/testany-eng:api-writer`, `/testany-eng:api-reviewer`, `/testany-eng:guardrails-writer`, `/testany-eng:guardrails-reviewer`, `/testany-eng:hld-writer`, `/testany-eng:hld-reviewer`, `/testany-eng:test-strategy-writer`, `/testany-eng:test-strategy-reviewer`, `/testany-eng:lld-writer`, `/testany-eng:lld-reviewer`, `/testany-eng:test-spec-writer`, `/testany-eng:test-reviewer`, `/testany-eng:runbook-writer` |
+| **testany-eng** | 研发流程 | `/testany-eng:brd-interviewer`, `/testany-eng:uc-interviewer`, `/testany-eng:prd-writer`, `/testany-eng:prd-reviewer`, `/testany-eng:prd-studio`, `/testany-eng:prototype-designer`, `/testany-eng:prototype-reviewer`, `/testany-eng:api-writer`, `/testany-eng:api-reviewer`, `/testany-eng:guardrails-writer`, `/testany-eng:guardrails-reviewer`, `/testany-eng:hld-writer`, `/testany-eng:hld-reviewer`, `/testany-eng:test-strategy-writer`, `/testany-eng:test-strategy-reviewer`, `/testany-eng:lld-writer`, `/testany-eng:lld-reviewer`, `/testany-eng:test-spec-writer`, `/testany-eng:test-reviewer`, `/testany-eng:runbook-writer` |
 | **testany-llm** | AI/LLM 工具 | `/testany-llm:skill-creator`, `/testany-llm:prompt-optimizer` |
 | **testany-mrkt** | 营销内容 | `/testany-mrkt:media-writer` |
 | **testany-bot** | 测试平台（通用版，按宿主能力适配） | `/testany-bot:case`, `/testany-bot:case-writing`, `/testany-bot:pipeline`, `/testany-bot:execution`, `/testany-bot:debug`, `/testany-bot:trigger`, `/testany-bot:workspace` |
@@ -50,7 +50,7 @@ testany-agent-skills/
 1. 选择 `Browse and install plugins`
 2. 选择 `testany-agent-skills`
 3. 选择需要的 plugin：
-   - `testany-eng` - 研发流程（BRD/PRD/API/HLD/LLD/Test/Runbook）
+   - `testany-eng` - 研发流程（BRD/UC/PRD/Prototype/API/Guardrails/HLD/LLD/Test/Runbook）
    - `testany-llm` - AI 工具（Skill/Prompt）
    - `testany-mrkt` - 营销内容（自媒体）
    - `testany-bot` - 测试平台（通用版，按宿主能力适配）
@@ -85,6 +85,8 @@ testany-agent-skills/
 | `/testany-eng:prd-writer` | PRD 写作技能，支持多种类型：新功能、第三方集成、重构、优化 |
 | `/testany-eng:prd-reviewer` | PRD 审查专家，作为「准出门禁」从多角色视角全面审查 |
 | `/testany-eng:prd-studio` | PRD 全自动工作室，自动完成写→审→改→审循环，无需人工干预 |
+| `/testany-eng:prototype-designer` | 交互原型设计助手，在前端仓库中基于 PRD + User Journey 生成可交互原型 |
+| `/testany-eng:prototype-reviewer` | 原型评审门禁，检查上游对齐、交互完整性、工程隔离与下游输入质量 |
 | `/testany-eng:api-writer` | API 契约撰写助手，支持 9 种协议，PRD→Contract 100% 覆盖检查 |
 | `/testany-eng:api-reviewer` | API 契约评审门禁，检查完整性/一致性/兼容性 |
 | `/testany-eng:guardrails-writer` | 工程规范编写助手，产出项目级 Guardrails |

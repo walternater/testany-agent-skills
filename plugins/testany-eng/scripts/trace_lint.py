@@ -57,6 +57,10 @@ ALLOWED_PRIORITY = {"P0", "P1", "P2", "P3"}
 ALLOWED_RISK_LEVEL = {"critical", "high", "medium", "low"}
 ALLOWED_TEST_CASE_LAYER = {"system_integration", "e2e", "regression", "compatibility", "non_functional"}
 ALLOWED_AUTOMATION = {"must", "should", "manual_ok"}
+ALLOWED_FLOW_KIND = {"user_journey", "system_flow", "state_transition"}
+ALLOWED_FLOW_KIND_LLD = ALLOWED_FLOW_KIND | {"module_interaction"}
+HLD_ALLOWED_RELATION_TARGET_PREFIXES = ("REQ-", "BRD-", "JOURNEY-", "PRD-", "API-")
+LLD_ALLOWED_RELATION_TARGET_PREFIXES = ("DEC-", "FLOW-", "REQ-", "BRD-", "JOURNEY-", "PRD-", "API-", "HLD-")
 REQUIRED_TOP_LEVEL_KEYS = ("schema", "artifact", "entities", "relations", "waivers")
 PRD_PROFILE_BUCKETS = (
     "requirements",
@@ -796,6 +800,226 @@ def validate_test_spec_profile(
             )
 
 
+def validate_hld_profile(
+    ctx: LintContext,
+    artifact_type: str | None,
+    entities: dict[str, Any] | None,
+    relations: Any,
+) -> None:
+    if artifact_type != "HLD":
+        ctx.add_issue(
+            "error",
+            "TRACE606",
+            "artifact.type",
+            f"`hld-profile-v1` 要求 artifact.type = `HLD`，当前为 `{artifact_type}`。",
+            "将 artifact.type 调整为 `HLD`。",
+        )
+    entities = validate_profile_buckets(ctx, entities, "TRACE606", "hld-profile-v1")
+    if not entities:
+        return
+
+    outgoing_relations: dict[str, list[dict[str, Any]]] = {}
+    if isinstance(relations, list):
+        for relation in relations:
+            if isinstance(relation, dict) and isinstance(relation.get("from"), str):
+                outgoing_relations.setdefault(relation["from"], []).append(relation)
+
+    modeled_count = 0
+
+    for index, decision in enumerate(entities.get("decisions", [])):
+        dec_path = f"entities.decisions[{index}]"
+        dec_id = decision.get("id", dec_path) if isinstance(decision, dict) else dec_path
+        if not isinstance(decision, dict):
+            continue
+        modeled_count += 1
+        for field in ("id", "title", "statement", "status", "scope", "decision", "rationale"):
+            if field not in decision:
+                add_missing_field_issue(ctx, dec_path, "TRACE606", field, f"Decision {dec_id}")
+        dec_relations = outgoing_relations.get(decision.get("id"), [])
+        valid_dec_relations = [
+            r for r in dec_relations
+            if r.get("type") in {"refines", "derived_from"}
+        ]
+        if not valid_dec_relations:
+            ctx.add_issue(
+                "error",
+                "TRACE606",
+                dec_path,
+                f"Decision {dec_id} 缺少 outgoing refines/derived_from relation，无法追溯到上游需求。",
+                f"至少为该 decision 建立 1 条 refines 或 derived_from relation 指向 REQ-* 或上游 artifact ID。",
+            )
+        for r in valid_dec_relations:
+            target = r.get("to", "")
+            if isinstance(target, str) and not any(target.startswith(p) for p in HLD_ALLOWED_RELATION_TARGET_PREFIXES):
+                ctx.add_issue(
+                    "error",
+                    "TRACE606",
+                    dec_path,
+                    f"Decision {dec_id} 的 relation target `{target}` 不是预期的上游对象（预期 REQ-* 或上游 artifact ID）。",
+                    "HLD 的 refines/derived_from 应指向 REQ-* 或上游 artifact（PRD-*/API-*/BRD-* 等）。",
+                )
+
+    for index, flow in enumerate(entities.get("flows", [])):
+        flow_path = f"entities.flows[{index}]"
+        flow_id = flow.get("id", flow_path) if isinstance(flow, dict) else flow_path
+        if not isinstance(flow, dict):
+            continue
+        modeled_count += 1
+        for field in ("id", "title", "statement", "status", "scope", "kind"):
+            if field not in flow:
+                add_missing_field_issue(ctx, flow_path, "TRACE606", field, f"Flow {flow_id}")
+        if flow.get("kind") is not None and flow.get("kind") not in ALLOWED_FLOW_KIND:
+            ctx.add_issue(
+                "error",
+                "TRACE606",
+                f"{flow_path}.kind",
+                f"Flow {flow_id} 的 kind 非法：`{flow.get('kind')}`。",
+                "将 kind 设置为 user_journey/system_flow/state_transition 之一。",
+            )
+        flow_relations = outgoing_relations.get(flow.get("id"), [])
+        valid_flow_relations = [
+            r for r in flow_relations
+            if r.get("type") in {"refines", "derived_from"}
+        ]
+        if not valid_flow_relations:
+            ctx.add_issue(
+                "error",
+                "TRACE606",
+                flow_path,
+                f"Flow {flow_id} 缺少 outgoing refines/derived_from relation，无法追溯到上游需求。",
+                f"至少为该 flow 建立 1 条 refines 或 derived_from relation 指向 REQ-* 或上游 artifact ID。",
+            )
+        for r in valid_flow_relations:
+            target = r.get("to", "")
+            if isinstance(target, str) and not any(target.startswith(p) for p in HLD_ALLOWED_RELATION_TARGET_PREFIXES):
+                ctx.add_issue(
+                    "error",
+                    "TRACE606",
+                    flow_path,
+                    f"Flow {flow_id} 的 relation target `{target}` 不是预期的上游对象。",
+                    "HLD 的 refines/derived_from 应指向 REQ-* 或上游 artifact（PRD-*/API-*/BRD-* 等）。",
+                )
+
+    if modeled_count == 0:
+        ctx.add_issue(
+            "error",
+            "TRACE606",
+            "entities",
+            "`hld-profile-v1` 至少应建模 1 条 decision 或 flow。",
+            "至少在 decisions / flows 中填写一条实体。",
+        )
+
+
+def validate_lld_profile(
+    ctx: LintContext,
+    artifact_type: str | None,
+    entities: dict[str, Any] | None,
+    relations: Any,
+) -> None:
+    if artifact_type != "LLD":
+        ctx.add_issue(
+            "error",
+            "TRACE607",
+            "artifact.type",
+            f"`lld-profile-v1` 要求 artifact.type = `LLD`，当前为 `{artifact_type}`。",
+            "将 artifact.type 调整为 `LLD`。",
+        )
+    entities = validate_profile_buckets(ctx, entities, "TRACE607", "lld-profile-v1")
+    if not entities:
+        return
+
+    outgoing_relations: dict[str, list[dict[str, Any]]] = {}
+    if isinstance(relations, list):
+        for relation in relations:
+            if isinstance(relation, dict) and isinstance(relation.get("from"), str):
+                outgoing_relations.setdefault(relation["from"], []).append(relation)
+
+    modeled_count = 0
+
+    for index, decision in enumerate(entities.get("decisions", [])):
+        dec_path = f"entities.decisions[{index}]"
+        dec_id = decision.get("id", dec_path) if isinstance(decision, dict) else dec_path
+        if not isinstance(decision, dict):
+            continue
+        modeled_count += 1
+        for field in ("id", "title", "statement", "status", "scope", "decision", "rationale"):
+            if field not in decision:
+                add_missing_field_issue(ctx, dec_path, "TRACE607", field, f"Decision {dec_id}")
+        dec_relations = outgoing_relations.get(decision.get("id"), [])
+        valid_dec_relations = [
+            r for r in dec_relations
+            if r.get("type") in {"refines", "derived_from"}
+        ]
+        if not valid_dec_relations:
+            ctx.add_issue(
+                "error",
+                "TRACE607",
+                dec_path,
+                f"Decision {dec_id} 缺少 outgoing refines/derived_from relation。",
+                f"至少为该 decision 建立 1 条 refines 或 derived_from relation 指向 DEC-*/FLOW-*/REQ-* 或上游 artifact ID。",
+            )
+        for r in valid_dec_relations:
+            target = r.get("to", "")
+            if isinstance(target, str) and not any(target.startswith(p) for p in LLD_ALLOWED_RELATION_TARGET_PREFIXES):
+                ctx.add_issue(
+                    "error",
+                    "TRACE607",
+                    dec_path,
+                    f"Decision {dec_id} 的 relation target `{target}` 不是预期的上游对象。",
+                    "LLD 的 refines/derived_from 应指向 DEC-*/FLOW-*/REQ-* 或上游 artifact（HLD-*/PRD-* 等）。",
+                )
+
+    for index, flow in enumerate(entities.get("flows", [])):
+        flow_path = f"entities.flows[{index}]"
+        flow_id = flow.get("id", flow_path) if isinstance(flow, dict) else flow_path
+        if not isinstance(flow, dict):
+            continue
+        modeled_count += 1
+        for field in ("id", "title", "statement", "status", "scope", "kind"):
+            if field not in flow:
+                add_missing_field_issue(ctx, flow_path, "TRACE607", field, f"Flow {flow_id}")
+        if flow.get("kind") is not None and flow.get("kind") not in ALLOWED_FLOW_KIND_LLD:
+            ctx.add_issue(
+                "error",
+                "TRACE607",
+                f"{flow_path}.kind",
+                f"Flow {flow_id} 的 kind 非法：`{flow.get('kind')}`。",
+                "将 kind 设置为 user_journey/system_flow/state_transition/module_interaction 之一。",
+            )
+        flow_relations = outgoing_relations.get(flow.get("id"), [])
+        valid_flow_relations = [
+            r for r in flow_relations
+            if r.get("type") in {"refines", "derived_from"}
+        ]
+        if not valid_flow_relations:
+            ctx.add_issue(
+                "error",
+                "TRACE607",
+                flow_path,
+                f"Flow {flow_id} 缺少 outgoing refines/derived_from relation。",
+                f"至少为该 flow 建立 1 条 refines 或 derived_from relation 指向 DEC-*/FLOW-*/REQ-* 或上游 artifact ID。",
+            )
+        for r in valid_flow_relations:
+            target = r.get("to", "")
+            if isinstance(target, str) and not any(target.startswith(p) for p in LLD_ALLOWED_RELATION_TARGET_PREFIXES):
+                ctx.add_issue(
+                    "error",
+                    "TRACE607",
+                    flow_path,
+                    f"Flow {flow_id} 的 relation target `{target}` 不是预期的上游对象。",
+                    "LLD 的 refines/derived_from 应指向 DEC-*/FLOW-*/REQ-* 或上游 artifact（HLD-*/PRD-* 等）。",
+                )
+
+    if modeled_count == 0:
+        ctx.add_issue(
+            "error",
+            "TRACE607",
+            "entities",
+            "`lld-profile-v1` 至少应建模 1 条 decision 或 flow。",
+            "至少在 decisions / flows 中填写一条实体。",
+        )
+
+
 def validate_relations(
     ctx: LintContext,
     relations: Any,
@@ -1058,6 +1282,20 @@ def lint_metadata(path: Path, metadata: dict[str, Any] | None, forced_profile: s
         )
     elif profile == "test-spec-profile-v1":
         validate_test_spec_profile(
+            ctx,
+            artifact_type,
+            entities_obj if isinstance(entities_obj, dict) else None,
+            metadata.get("relations"),
+        )
+    elif profile == "hld-profile-v1":
+        validate_hld_profile(
+            ctx,
+            artifact_type,
+            entities_obj if isinstance(entities_obj, dict) else None,
+            metadata.get("relations"),
+        )
+    elif profile == "lld-profile-v1":
+        validate_lld_profile(
             ctx,
             artifact_type,
             entities_obj if isinstance(entities_obj, dict) else None,

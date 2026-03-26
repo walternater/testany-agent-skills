@@ -96,6 +96,15 @@ description: 'LLD review, Low-Level Design review, 详细设计评审。Use when
 
 **目标**：验证 LLD 的基线引用和 Manifest 完整性。
 
+**0. Traceability Metadata 校验（先于内容审查）**
+
+- [ ] LLD 是否包含 `TRACEABILITY-METADATA` block？→ 缺失 → **P1**（继续后续审查）
+- [ ] 若 block 存在，执行 `python3 plugins/testany-eng/scripts/trace_lint.py --format json <LLD 路径>`
+  - error → **P0**（trace-lint blocking issue）
+  - warning → **P1**
+- [ ] 若 PRD/HLD 路径可用，执行 `trace_build_rtm.py` 检查跨文档追溯
+  - RTM001-RTM004 级别 issue → **P0**
+
 **检查项**：
 - **版本引用**：PRD/HLD/Contract 版本是否标注？（缺失 → P0，标注不完整 → P1）
 - **Manifest**：是否列出所有模块？Excluded 是否有 N/A 理由？（缺 Manifest → P0，缺理由 → P1）

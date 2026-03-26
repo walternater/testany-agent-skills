@@ -59,7 +59,7 @@ writer 至少要做到：
 - 输出稳定的 `RISK-*`、`MR-*`、`BEH-*`
 - `artifact.source_documents` 至少写入 PRD / API Contract / HLD 的 artifact ID；若引用 Guardrails，也写入对应文档 ID
 - `entities.requirements / decisions / flows / test_cases` 如当前阶段不建模，也必须保留空数组
-- 尽量使用 `relations[].type=derived_from` 或 `refines`，将 `RISK-*`、`MR-*`、`BEH-*` 追溯到 `REQ-*` 或上游 artifact ID
+- 尽量使用 `relations[].type=derived_from` 或 `refines`，将 `RISK-*`、`MR-*`、`BEH-*` 追溯到 `REQ-*`、`DEC-*`、`FLOW-*` 或上游 artifact ID（当 HLD 包含 `hld-profile-v1` 元数据时，优先追溯到具体的架构决策和流程）
 - 文档写入文件后，必须先执行 `trace-lint`；若 PRD 路径可用，再执行 `trace-build-rtm` 检查跨文档引用
 
 ---

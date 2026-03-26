@@ -26,7 +26,7 @@ import trace_lint
 TOOL_VERSION = "1.0.0"
 ARTIFACT_PREFIXES = ("BRD-", "JOURNEY-", "PRD-", "API-", "HLD-", "LLD-", "TSTRAT-", "TSPEC-", "RUNBOOK-")
 ENTITY_PREFIXES = ("REQ-", "RISK-", "MR-", "BEH-", "DEC-", "FLOW-", "CASE-", "WVR-", "REL-")
-MATRIX_BUCKETS = ("requirements", "risks", "must_not_regress", "external_behaviors", "test_cases")
+MATRIX_BUCKETS = ("requirements", "risks", "must_not_regress", "external_behaviors", "decisions", "flows", "test_cases")
 
 
 @dataclass
@@ -305,15 +305,28 @@ def aggregate(
             for relation in outgoing_relations
             if relation.get("type") == "derived_from" and isinstance(relation.get("to"), str)
         )
+        refines = sorted(
+            relation["to"]
+            for relation in outgoing_relations
+            if relation.get("type") == "refines" and isinstance(relation.get("to"), str)
+        )
+        refined_by = sorted(
+            relation["from"]
+            for relation in incoming_relations
+            if relation.get("type") == "refines" and isinstance(relation.get("from"), str)
+        )
         waived_by = sorted(active_waivers.get(entity_id, []))
         bucket = entity["bucket"]
 
         if bucket == "risks":
             covered = bool(verified_by or mitigated_by or waived_by)
         elif bucket in {"requirements", "must_not_regress", "external_behaviors"}:
-            covered = bool(verified_by or waived_by)
+            covered = bool(verified_by or refined_by or waived_by)
+        elif bucket in {"decisions", "flows"}:
+            # DEC-*/FLOW-* are covered if they have outgoing refines/derived_from (tracing to upstream)
+            covered = bool(refines or derived_from or waived_by)
         else:
-            covered = bool(verified_by or mitigated_by or derived_from or waived_by)
+            covered = bool(verified_by or mitigated_by or derived_from or refines or waived_by)
 
         if waived_by:
             coverage_status = "waived"
@@ -332,6 +345,8 @@ def aggregate(
             "verified_by": verified_by,
             "mitigated_by": mitigated_by,
             "derived_from": derived_from,
+            "refines": refines,
+            "refined_by": refined_by,
             "waived_by": waived_by,
             "coverage_status": coverage_status,
             "data": entity["data"],
@@ -384,6 +399,12 @@ def aggregate(
         "external_behaviors_uncovered": sum(
             1 for row in matrices["external_behaviors"] if row["coverage_status"] == "uncovered"
         ),
+        "decisions_total": len(matrices.get("decisions", [])),
+        "decisions_covered": count_covered(matrices.get("decisions", [])),
+        "decisions_uncovered": sum(1 for row in matrices.get("decisions", []) if row["coverage_status"] == "uncovered"),
+        "flows_total": len(matrices.get("flows", [])),
+        "flows_covered": count_covered(matrices.get("flows", [])),
+        "flows_uncovered": sum(1 for row in matrices.get("flows", []) if row["coverage_status"] == "uncovered"),
         "test_cases_total": len(matrices["test_cases"]),
         "unresolved_relation_targets": len(unresolved_relation_targets),
         "orphan_entities": len(orphan_entities),
@@ -487,6 +508,8 @@ def render_markdown(
         f"| Risks Covered / Total | {summary['risks_covered']} / {summary['risks_total']} |",
         f"| Must-not-regress Covered / Total | {summary['must_not_regress_covered']} / {summary['must_not_regress_total']} |",
         f"| External Behaviors Covered / Total | {summary['external_behaviors_covered']} / {summary['external_behaviors_total']} |",
+        f"| Decisions Covered / Total | {summary['decisions_covered']} / {summary['decisions_total']} |",
+        f"| Flows Covered / Total | {summary['flows_covered']} / {summary['flows_total']} |",
         f"| Test Cases | {summary['test_cases_total']} |",
         f"| Unresolved Relation Targets | {summary['unresolved_relation_targets']} |",
         f"| Orphan Entities | {summary['orphan_entities']} |",
@@ -515,6 +538,8 @@ def render_markdown(
                 linked = row["verified_by"]
             elif extra_column == "risk":
                 linked = sorted(set(row["verified_by"] + row["mitigated_by"]))
+            elif extra_column == "refines":
+                linked = row.get("refines", []) + row.get("derived_from", [])
             else:
                 linked = row.get("verifies", [])
             lines.append(
@@ -526,6 +551,8 @@ def render_markdown(
     render_matrix("Risks Matrix", aggregate_payload["matrices"]["risks"], "risk")
     render_matrix("Must-not-regress Matrix", aggregate_payload["matrices"]["must_not_regress"], "verified")
     render_matrix("External Behaviors Matrix", aggregate_payload["matrices"]["external_behaviors"], "verified")
+    render_matrix("Decisions Matrix", aggregate_payload["matrices"].get("decisions", []), "refines")
+    render_matrix("Flows Matrix", aggregate_payload["matrices"].get("flows", []), "refines")
 
     lines.extend(
         [
@@ -551,6 +578,14 @@ def render_markdown(
         (
             "Uncovered External Behaviors",
             [row for row in aggregate_payload["matrices"]["external_behaviors"] if row["coverage_status"] == "uncovered"],
+        ),
+        (
+            "Uncovered Decisions",
+            [row for row in aggregate_payload["matrices"].get("decisions", []) if row["coverage_status"] == "uncovered"],
+        ),
+        (
+            "Uncovered Flows",
+            [row for row in aggregate_payload["matrices"].get("flows", []) if row["coverage_status"] == "uncovered"],
         ),
     ]
     for title, rows in missing_sections:
