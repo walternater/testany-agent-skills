@@ -1,6 +1,6 @@
 interface:
   display_name: "Guardrails Reviewer"
-  short_description: "Review engineering guardrails for coverage"
+  short_description: "Review guardrails as a project governance baseline"
   icon_small: "./assets/testany-logo-small.png"
   icon_large: "./assets/testany-logo.svg"
-  default_prompt: "Use $guardrails-reviewer to review this Guardrails document and flag gaps."
+  default_prompt: "Use $guardrails-reviewer to review this Guardrails update, including trigger decision, fact standard, workflow hooks, and downstream impact."

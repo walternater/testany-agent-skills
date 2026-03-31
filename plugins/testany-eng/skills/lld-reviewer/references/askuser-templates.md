@@ -49,6 +49,25 @@ options:
 
 ---
 
+## Guardrails Trigger 澄清
+
+**触发时机**：Phase 0 - 无法判断这次评审是否已经命中项目级约束缺口
+
+```yaml
+question: "这次 LLD 评审发现的问题，是否会改变项目里多个模块都要遵守的默认规则？"
+header: "Guardrails Trigger"
+multiSelect: false
+options:
+  - label: "是，会改变项目默认规则"
+    description: "应优先判断是否需要更新 Guardrails"
+  - label: "否，只影响当前 LLD"
+    description: "通常无需触发 Guardrails"
+  - label: "不确定，需要结合现有 Guardrails 一起判断"
+    description: "先读取现有 Guardrails 与批准基线再决定"
+```
+
+---
+
 ## N/A 理由澄清
 
 **触发时机**：Gate 1 - Manifest 中模块标记为 Excluded 但理由不清

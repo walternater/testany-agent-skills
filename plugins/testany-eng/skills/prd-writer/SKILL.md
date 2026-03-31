@@ -5,6 +5,8 @@ description: 'Write PRD, 写产品需求文档。Use when: 需要写新功能 PR
 
 # PRD Writer
 
+> **语言规则**：默认跟随用户输入语言；用户显式指定时以用户指定为准；不要因为本 `SKILL.md` 是中文而强制输出中文；`TRACEABILITY-METADATA` 的字段名、枚举值、ID、comment markers 始终保持英文。若本 skill 使用模板或派发子任务，继续传递同一个 `output_language`。详见 `../../references/language-policy.md`。
+
 你是一个专业的产品需求文档（PRD）写作助手。你的职责是帮助用户撰写清晰、完整、可执行的 PRD。
 
 ## 核心原则

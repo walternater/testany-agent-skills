@@ -1,0 +1,278 @@
+version: 1
+notes:
+  - "Guardrails is cross-cutting, not a default mainline gate."
+  - "Prototype is optional and only shown when repo or user intent justifies it."
+  - "Use artifact-detection.md for detailed recognition and confidence rules."
+
+states:
+  - missing
+  - draft
+  - in_review
+  - approved
+  - unknown
+
+scan:
+  priority_dirs:
+    - .
+    - docs
+    - doc
+    - spec
+    - design
+    - workflow
+    - test
+    - tests
+  file_types:
+    - md
+    - yaml
+    - yml
+    - json
+    - proto
+    - graphql
+    - gql
+  evidence_order:
+    - traceability_metadata
+    - inline_status
+    - review_certificate
+    - review_report
+    - filename_or_title_heuristic
+
+lanes:
+  - id: main
+    title: 主流程
+  - id: prototype
+    title: 可选 Prototype 分支
+  - id: guardrails
+    title: 横切 Guardrails 分支
+
+artifacts:
+  - id: BRD
+    filename_keywords: [brd]
+  - id: USER_JOURNEY
+    filename_keywords: [journey, user-journey, user_journey, uc]
+  - id: PRD
+    metadata_types: [PRD]
+    filename_keywords: [prd]
+  - id: API_CONTRACT
+    filename_keywords: [openapi, swagger, asyncapi, api-contract, api_contract, contract, graphql, schema, proto]
+  - id: HLD
+    metadata_types: [HLD]
+    filename_keywords: [hld]
+  - id: TEST_STRATEGY
+    metadata_types: [TEST_STRATEGY]
+    filename_keywords: [test-strategy, test_strategy, strategy]
+  - id: LLD
+    metadata_types: [LLD]
+    filename_keywords: [lld]
+  - id: TEST_SPEC
+    metadata_types: [TEST_SPEC]
+    filename_keywords: [test-spec, test_spec, test-package, test_package]
+  - id: RUNBOOK
+    filename_keywords: [runbook]
+  - id: PROTOTYPE
+    filename_keywords: [_prototype-manifest, prototype]
+  - id: GUARDRAILS
+    filename_keywords: [guardrails, engineering-standards, engineering_standards]
+
+nodes:
+  - id: brd-interviewer
+    lane: main
+    kind: interviewer
+    command: /brd-interviewer
+    produces: BRD
+    next: [uc-interviewer]
+
+  - id: uc-interviewer
+    lane: main
+    kind: interviewer
+    command: /uc-interviewer
+    requires:
+      - BRD: approved_or_exists
+    produces: USER_JOURNEY
+    next: [prd-writer]
+
+  - id: prd-writer
+    lane: main
+    kind: writer
+    command: /prd-writer
+    requires:
+      - BRD: approved_or_exists
+      - USER_JOURNEY: preferred
+    produces: PRD
+    next: [prd-reviewer]
+
+  - id: prd-reviewer
+    lane: main
+    kind: reviewer
+    command: /prd-reviewer
+    requires:
+      - PRD: exists
+    approves: PRD
+    next: [api-writer]
+
+  - id: prototype-designer
+    lane: prototype
+    kind: writer
+    command: /prototype-designer
+    requires:
+      - PRD: approved
+      - USER_JOURNEY: exists
+    produces: PROTOTYPE
+    show_when:
+      - frontend_repo
+      - explicit_ui_validation
+    next: [prototype-reviewer]
+
+  - id: prototype-reviewer
+    lane: prototype
+    kind: reviewer
+    command: /prototype-reviewer
+    requires:
+      - PROTOTYPE: exists
+      - PRD: approved
+      - USER_JOURNEY: exists
+    approves: PROTOTYPE
+    next: [api-writer]
+
+  - id: api-writer
+    lane: main
+    kind: writer
+    command: /api-writer
+    requires:
+      - PRD: approved
+    produces: API_CONTRACT
+    next: [api-reviewer]
+
+  - id: api-reviewer
+    lane: main
+    kind: reviewer
+    command: /api-reviewer
+    requires:
+      - API_CONTRACT: exists
+      - PRD: preferred
+    approves: API_CONTRACT
+    next: [hld-writer]
+
+  - id: hld-writer
+    lane: main
+    kind: writer
+    command: /hld-writer
+    requires:
+      - PRD: approved
+      - API_CONTRACT: approved
+    produces: HLD
+    next: [hld-reviewer]
+
+  - id: hld-reviewer
+    lane: main
+    kind: reviewer
+    command: /hld-reviewer
+    requires:
+      - HLD: exists
+      - PRD: preferred
+    approves: HLD
+    next: [test-strategy-writer]
+
+  - id: test-strategy-writer
+    lane: main
+    kind: writer
+    command: /test-strategy-writer
+    requires:
+      - PRD: approved
+      - API_CONTRACT: approved
+      - HLD: approved
+      - GUARDRAILS: optional
+    produces: TEST_STRATEGY
+    next: [test-strategy-reviewer]
+
+  - id: test-strategy-reviewer
+    lane: main
+    kind: reviewer
+    command: /test-strategy-reviewer
+    requires:
+      - TEST_STRATEGY: exists
+      - PRD: preferred
+      - API_CONTRACT: preferred
+      - HLD: preferred
+    approves: TEST_STRATEGY
+    next: [lld-writer]
+
+  - id: lld-writer
+    lane: main
+    kind: writer
+    command: /lld-writer
+    requires:
+      - PRD: approved
+      - API_CONTRACT: approved
+      - HLD: approved
+      - TEST_STRATEGY: approved
+      - GUARDRAILS: optional
+    produces: LLD
+    next: [lld-reviewer]
+
+  - id: lld-reviewer
+    lane: main
+    kind: reviewer
+    command: /lld-reviewer
+    requires:
+      - LLD: exists
+    approves: LLD
+    next: [test-spec-writer]
+
+  - id: test-spec-writer
+    lane: main
+    kind: writer
+    command: /test-spec-writer
+    requires:
+      - PRD: approved
+      - API_CONTRACT: approved
+      - HLD: approved
+      - LLD: approved
+      - TEST_STRATEGY: approved
+      - GUARDRAILS: optional
+    produces: TEST_SPEC
+    next: [test-reviewer]
+
+  - id: test-reviewer
+    lane: main
+    kind: reviewer
+    command: /test-reviewer
+    requires:
+      - TEST_SPEC: exists
+      - TEST_STRATEGY: preferred
+    approves: TEST_SPEC
+    next: [runbook-writer]
+
+  - id: runbook-writer
+    lane: main
+    kind: writer
+    command: /runbook-writer
+    requires:
+      - HLD: approved
+      - LLD: preferred
+      - TEST_SPEC: preferred
+      - GUARDRAILS: optional
+    produces: RUNBOOK
+    next: []
+
+  - id: guardrails-writer
+    lane: guardrails
+    kind: writer
+    command: /guardrails-writer
+    requires: []
+    produces: GUARDRAILS
+    show_when:
+      - new_project_without_guardrails
+      - architecture_or_platform_change
+      - compliance_change
+      - repeated_review_findings
+      - incident_postmortem
+    next: [guardrails-reviewer]
+
+  - id: guardrails-reviewer
+    lane: guardrails
+    kind: reviewer
+    command: /guardrails-reviewer
+    requires:
+      - GUARDRAILS: exists
+    approves: GUARDRAILS
+    next: []

@@ -1,6 +1,0 @@
-interface:
-  display_name: "PRD Studio"
-  short_description: "Automate PRD drafting, review, and iteration"
-  icon_small: "./assets/testany-logo-small.png"
-  icon_large: "./assets/testany-logo.svg"
-  default_prompt: "Use $prd-studio to draft, review, and iterate on a PRD for this feature."

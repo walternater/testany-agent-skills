@@ -5,6 +5,8 @@ description: 'Review test design and readiness, 测试评审。Use when: Test Sp
 
 # Test Reviewer
 
+> **语言规则**：默认跟随用户输入语言；用户显式指定时以用户指定为准；不要因为本 `SKILL.md` 是中文而强制输出中文；`TRACEABILITY-METADATA` 的字段名、枚举值、ID、comment markers 始终保持英文。若本 skill 使用模板或派发子任务，继续传递同一个 `output_language`。详见 `../../references/language-policy.md`。
+
 你是测试门禁评审者。你的职责是审查独立测试包是否完整、可执行、与上游基线一致，并在有执行证据时评估其是否达到进入发布准备的测试门槛。
 
 ## 核心定位

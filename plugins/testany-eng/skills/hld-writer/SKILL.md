@@ -5,6 +5,8 @@ description: 'Write HLD, High-Level Design, 写技术设计文档。Use when: PR
 
 # HLD Writer
 
+> **语言规则**：默认跟随用户输入语言；用户显式指定时以用户指定为准；不要因为本 `SKILL.md` 是中文而强制输出中文；`TRACEABILITY-METADATA` 的字段名、枚举值、ID、comment markers 始终保持英文。若本 skill 使用模板或派发子任务，继续传递同一个 `output_language`。详见 `../../references/language-policy.md`。
+
 你是一个专业的技术设计文档（HLD）写作助手。你的职责是帮助用户撰写清晰、完整、可落地的高层技术设计文档。
 
 ## 核心原则
@@ -19,6 +21,7 @@ description: 'Write HLD, High-Level Design, 写技术设计文档。Use when: PR
 8. **复用优先**：优先复用内部模块/共享服务/第三方成熟方案，避免重复造轮子
 9. **需求可追溯**：HLD 必须包含 PRD↔HLD 需求映射表，确保需求变更时可追溯
 10. **强制使用 AskUserQuestion**：需要澄清技术细节时必须使用工具提问
+11. **先做 Guardrails trigger check**：如果 HLD 正在定义项目级默认规则，先判断是否必须更新 Guardrails
 
 ## HLD 内容边界（强制遵守）
 
@@ -292,7 +295,8 @@ options:
   □ 0.4 读取其他确认的文档
   □ 0.5 识别可复用资源
   □ 0.6 记录关键约束
-  □ 0.7 输出上下文收集报告
+  □ 0.7 执行 Guardrails trigger check
+  □ 0.8 输出上下文收集报告
 □ 阶段一：需求理解
   □ 分析 PRD，识别 HLD 类型
   □ 理解 API Contract 中的接口定义
@@ -330,6 +334,7 @@ options:
 | 需求文档 | `**/PRD*`, `**/prd*`, `**/*需求*` | 找到对应的 PRD（必需） |
 | API Contract | `**/*contract*`, `**/*openapi*`, `**/*swagger*`, `**/*asyncapi*` | 找到对应的 API Contract（必需） |
 | 设计文档 | `**/*HLD*`, `**/*设计*`, `**/*design*`, `**/*架构*` | 了解现有架构 |
+| Guardrails | `**/*guardrail*`, `**/*engineering-standard*`, `**/*工程规范*` | 判断现有项目级默认规则是否存在 |
 | 技术规范 | `**/ADR*`, `**/adr*`, `**/*规范*`, `**/*standard*` | 了解技术约定 |
 | 项目配置 | `package.json`, `pyproject.toml`, `go.mod`, `pom.xml` | 了解技术栈 |
 | 共享模块 | `**/shared/*`, `**/common/*`, `**/lib/*`, `**/pkg/*` | 识别可复用资源 |
@@ -386,28 +391,42 @@ options:
 - 用户可能会排除一些过期文档，也可能补充遗漏的文档
 - **只有用户确认后，才进入 0.3 阶段读取文档**
 
-#### 0.3 读取用户确认的文档
+#### 0.3 读取 PRD 和 API Contract（必读）
 
 根据用户在 0.2 中确认的文档列表：
 - **优先读取 PRD**：理解业务背景、功能需求、非功能目标
 - 识别 PRD 中的"建议方案"，HLD 需要做最终决定
-- **仔细读取**其他被确认的文档
+- **仔细读取 API Contract**：明确接口边界、兼容性与错误契约
+- 记录从 PRD 和 API Contract 中学到的关键信息
+
+#### 0.4 读取其他确认的文档
+
+- 读取用户在 0.2 中确认的其他设计/规范/Guardrails/ADR
+- 只提取与当前 HLD 决策直接相关的信息，避免把噪音带入上下文
 - 记录从每个文档中学到的关键信息
 
-#### 0.4 识别可复用资源
+#### 0.5 识别可复用资源
 
 - 基于已读取的文档，识别可复用的内部模块/共享服务
 - 评估第三方成熟方案（优先复用，避免重复造轮子）
 - **必须注明来源**：从哪个文档/代码中识别到的
 
-#### 0.5 记录关键约束
+#### 0.6 记录关键约束
 
 - PRD 中的非功能需求（性能、安全目标）
 - 技术栈限制
 - 团队能力边界
 - 已有 API/错误码契约（若有）
 
-#### 0.6 输出「上下文收集报告」（强制）
+#### 0.7 执行 Guardrails trigger check（强制）
+
+在进入阶段一前，基于 `../../references/guardrails-trigger-check.md` 执行一次 `Guardrails trigger check`：
+
+- `no_trigger`：继续进入阶段一
+- `suggest_guardrails`：在上下文收集报告中记录原因、影响域和推荐动作后继续
+- `require_guardrails_before_design`：停止当前 HLD 写作，明确建议先运行 `guardrails-writer`
+
+#### 0.8 输出「上下文收集报告」（强制）
 
 在进入阶段一之前，必须先输出以下报告：
 
@@ -429,11 +448,18 @@ options:
 |------|------|-------------|------|
 | [资源名] | 内部模块/共享服务/第三方 | [关系描述] | [文档/代码路径] |
 
+### Guardrails Trigger Check
+- Decision: [no_trigger / suggest_guardrails / require_guardrails_before_design]
+- Why: [一句话说明原因]
+- Impacted domains: [API / Security / Data / Release / Observability ...]
+- Guardrails status: [baseline exists / missing domain / outdated / drift]
+- Recommended next action: [continue / update guardrails soon / run guardrails-writer first]
+
 ### 未找到信息的领域（需用户补充）
 - [列出仍不确定的技术信息]
 ```
 
-**上下文收集报告无需用户再次确认，可直接进入阶段一。**（因为文档选择已在 0.2 确认过）
+**上下文收集报告无需用户再次确认，可直接进入阶段一。**（因为文档选择已在 0.2 确认过；若 `Guardrails trigger check = require_guardrails_before_design`，则不得进入阶段一）
 
 ### 阶段一：需求理解
 

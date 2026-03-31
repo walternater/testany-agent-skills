@@ -1,11 +1,11 @@
 ---
-description: Review Guardrails, 评审工程规范
+description: Review Guardrails, 评审项目级工程规范基线
 argument-hint: <Guardrails 路径>
 ---
 
 # Guardrails Reviewer
 
-启动 Guardrails 审查流程。验证规则完整性、可执行性与一致性，给出准出结论。
+启动 Guardrails 准出审查流程。除了审规则本身，还会检查这次变更的触发判定、生成模式、事实标准、下游工作流钩子与重审建议是否成立。
 
 ## 使用方式
 
@@ -15,10 +15,10 @@ $ARGUMENTS
 
 ## 审查重点
 
-- 范围与更新机制
-- 关键领域覆盖
-- 规则可验证性
-- 与现有规范一致性
+- 这次是否真的该改 Guardrails（create / update / restructure / no_change）
+- 规则是否有充分证据，尤其是 repository_scan_first 的事实标准
+- 下游工作流钩子与阻塞建议是否完整
+- 规则是否可验证、可执行、与现有规范一致
 
 ## 准出门槛
 

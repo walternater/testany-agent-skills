@@ -5,6 +5,8 @@ description: 'Write LLD, Low-Level Design, 写详细设计。Use when: PRD/HLD/A
 
 # LLD Writer
 
+> **语言规则**：默认跟随用户输入语言；用户显式指定时以用户指定为准；不要因为本 `SKILL.md` 是中文而强制输出中文；`TRACEABILITY-METADATA` 的字段名、枚举值、ID、comment markers 始终保持英文。若本 skill 使用模板或派发子任务，继续传递同一个 `output_language`。详见 `../../references/language-policy.md`。
+
 你是一个低层设计（LLD）写作助手。你的目标是把 HLD/Contract 的决策落地为可实现的设计细节，并通过模块化模板确保不漏关键工程约束。
 
 ## 核心原则
@@ -16,6 +18,7 @@ description: 'Write LLD, Low-Level Design, 写详细设计。Use when: PRD/HLD/A
 | **基于证据** | 技术现状/既有能力必须有依据；缺失就 AskUserQuestion |
 | **模块化组合** | LLD = Core + Add-ons + Profile + Guardrails |
 | **Guardrails 最高优先级** | 项目约束文档优先于个人偏好 |
+| **先做 Guardrails trigger check** | 若本次 LLD 反向暴露项目级约束缺口，先判断是否必须更新 Guardrails |
 | **复用优先** | 优先复用已有模块/共享服务/第三方方案 |
 
 ## 内容边界
@@ -47,7 +50,8 @@ description: 'Write LLD, Low-Level Design, 写详细设计。Use when: PRD/HLD/A
   □ 0.2 AskUserQuestion 确认基线
   □ 0.3 读取 PRD/HLD/Contract
   □ 0.4 确认 Guardrails
-  □ 0.5 输出「上下文收集报告」
+  □ 0.5 执行 Guardrails trigger check
+  □ 0.6 输出「上下文收集报告」
 
 □ Phase 1: Profile 与模块选择
   □ 1.1 提取 Guardrails 强制模块
@@ -87,7 +91,11 @@ description: 'Write LLD, Low-Level Design, 写详细设计。Use when: PRD/HLD/A
 2. **基线确认**：AskUserQuestion 确认最新批准基线（模板见 `references/askuser-templates.md`）
 3. **读取文档**：提取 PRD 需求、HLD 决策、Contract 接口
 4. **Guardrails 确认**：AskUserQuestion 确认是否存在
-5. **输出**：「上下文收集报告」（格式见 `references/output-templates.md`）
+5. **Trigger check**：基于 `../../references/guardrails-trigger-check.md` 执行一次 `Guardrails trigger check`
+   - `no_trigger`：继续阶段 1
+   - `suggest_guardrails`：记录影响域与推荐动作后继续
+   - `require_guardrails_before_design`：停止当前 LLD 写作，明确建议先运行 `guardrails-writer`
+6. **输出**：「上下文收集报告」（格式见 `references/output-templates.md`）
 
 ---
 
@@ -173,3 +181,4 @@ LLD 必须内嵌 `TRACEABILITY-METADATA` block（`lld-profile-v1`）。要求：
 | `references/guardrails-template.md` | Guardrails 模板 |
 | `references/askuser-templates.md` | AskUserQuestion 模板 |
 | `references/output-templates.md` | 各阶段输出格式模板 |
+| `../../references/guardrails-trigger-check.md` | Guardrails 触发检查与分流规则 |

@@ -13,8 +13,8 @@ Skills 是包含指令、脚本和资源的文件夹，Claude 可以动态加载
 
 | Plugin | 领域 | 命令 |
 |--------|------|------|
-| **testany-eng** | 研发流程 | `/testany-eng:brd-interviewer`, `/testany-eng:uc-interviewer`, `/testany-eng:prd-writer`, `/testany-eng:prd-reviewer`, `/testany-eng:prd-studio`, `/testany-eng:prototype-designer`, `/testany-eng:prototype-reviewer`, `/testany-eng:api-writer`, `/testany-eng:api-reviewer`, `/testany-eng:guardrails-writer`, `/testany-eng:guardrails-reviewer`, `/testany-eng:hld-writer`, `/testany-eng:hld-reviewer`, `/testany-eng:test-strategy-writer`, `/testany-eng:test-strategy-reviewer`, `/testany-eng:lld-writer`, `/testany-eng:lld-reviewer`, `/testany-eng:test-spec-writer`, `/testany-eng:test-reviewer`, `/testany-eng:runbook-writer` |
-| **testany-llm** | AI/LLM 工具 | `/testany-llm:skill-creator`, `/testany-llm:prompt-optimizer` |
+| **testany-eng** | 研发流程 | `/testany-eng:guide`, `/testany-eng:brd-interviewer`, `/testany-eng:uc-interviewer`, `/testany-eng:prd-writer`, `/testany-eng:prd-reviewer`, `/testany-eng:prototype-designer`, `/testany-eng:prototype-reviewer`, `/testany-eng:api-writer`, `/testany-eng:api-reviewer`, `/testany-eng:guardrails-writer`, `/testany-eng:guardrails-reviewer`, `/testany-eng:hld-writer`, `/testany-eng:hld-reviewer`, `/testany-eng:test-strategy-writer`, `/testany-eng:test-strategy-reviewer`, `/testany-eng:lld-writer`, `/testany-eng:lld-reviewer`, `/testany-eng:test-spec-writer`, `/testany-eng:test-reviewer`, `/testany-eng:runbook-writer` |
+| **testany-llm** | AI/LLM 工具 | `/testany-llm:prompt-optimizer` |
 | **testany-mrkt** | 营销内容 | `/testany-mrkt:media-writer` |
 | **testany-bot** | 测试平台（通用版，按宿主能力适配） | `/testany-bot:case`, `/testany-bot:case-writing`, `/testany-bot:pipeline`, `/testany-bot:execution`, `/testany-bot:debug`, `/testany-bot:trigger`, `/testany-bot:workspace` |
 
@@ -51,7 +51,7 @@ testany-agent-skills/
 2. 选择 `testany-agent-skills`
 3. 选择需要的 plugin：
    - `testany-eng` - 研发流程（BRD/UC/PRD/Prototype/API/Guardrails/HLD/LLD/Test/Runbook）
-   - `testany-llm` - AI 工具（Skill/Prompt）
+   - `testany-llm` - AI 工具（Prompt 优化）
    - `testany-mrkt` - 营销内容（自媒体）
    - `testany-bot` - 测试平台（通用版，按宿主能力适配）
 4. 选择 `Install now`
@@ -62,6 +62,7 @@ testany-agent-skills/
 
 ```
 /testany-eng:prd-writer 写一个用户登录功能的 PRD
+/testany-eng:guide 帮我扫一下这个项目下一步该做什么
 /testany-eng:prd-reviewer ./docs/prd-login.md
 /testany-llm:prompt-optimizer 帮我优化这个提示词...
 /testany-mrkt:media-writer 写一篇关于 AI 的公众号文章
@@ -78,13 +79,15 @@ testany-agent-skills/
 
 ## testany-eng（研发流程）
 
+`testany-eng` 默认跟随用户输入语言输出；用户显式指定语言时以用户指定为准；`TRACEABILITY-METADATA` 的字段名、枚举值与稳定 ID 保持英文。
+
 | 命令 | 描述 |
 |------|------|
+| `/testany-eng:guide` | 流程导航助手，扫描现有文档与准出状态，判断当前所处阶段并推荐下一步最合适的 skill |
 | `/testany-eng:brd-interviewer` | 业务需求访谈专家，通过选择题引导 stakeholder 输出结构化 BRD |
 | `/testany-eng:uc-interviewer` | 用户旅程访谈专家，在 BRD 和 PRD 之间建立对齐检查点 |
 | `/testany-eng:prd-writer` | PRD 写作技能，支持多种类型：新功能、第三方集成、重构、优化 |
 | `/testany-eng:prd-reviewer` | PRD 审查专家，作为「准出门禁」从多角色视角全面审查 |
-| `/testany-eng:prd-studio` | PRD 全自动工作室，自动完成写→审→改→审循环，无需人工干预 |
 | `/testany-eng:prototype-designer` | 交互原型设计助手，在前端仓库中基于 PRD + User Journey 生成可交互原型 |
 | `/testany-eng:prototype-reviewer` | 原型评审门禁，检查上游对齐、交互完整性、工程隔离与下游输入质量 |
 | `/testany-eng:api-writer` | API 契约撰写助手，支持 9 种协议，PRD→Contract 100% 覆盖检查 |
@@ -105,7 +108,6 @@ testany-agent-skills/
 
 | 命令 | 描述 |
 |------|------|
-| `/testany-llm:skill-creator` | Skill 创建指南，帮助创建和优化 Claude Code Skills |
 | `/testany-llm:prompt-optimizer` | AI 提示词优化专家，支持 Claude、ChatGPT、DeepSeek、豆包、智谱、Gemini 等多平台 |
 
 ## testany-mrkt（营销内容）
@@ -147,7 +149,7 @@ Frontmatter 只需要两个字段：
 - `name` - skill 的唯一标识符（小写，用连字符分隔）
 - `description` - 完整描述 skill 的功能和使用场景
 
-更多详情请使用 `/testany-llm:skill-creator`，或参考 [skill-authoring.md](./plugins/testany-llm/skills/skill-creator/references/skill-authoring.md)。
+本仓库当前不再内置 `skill-creator` scaffolding/打包工具。新增或维护 skill 时，请直接创建或编辑对应 plugin 下的 `SKILL.md` 与配套 `references/`、`assets/`、`scripts/`，并同步更新 `README`、`marketplace.json`、plugin `plugin.json` 和 `CHANGELOG.md`。
 
 # 许可证
 

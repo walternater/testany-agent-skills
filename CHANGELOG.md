@@ -9,6 +9,13 @@
 
 ### 新增
 
+- **testany-eng 流程导航能力**：
+  - 新增 `guide` skill：扫描现有文档与准出状态，判断当前项目所处阶段并推荐下一步最合适的 `testany-eng` skill
+  - 新增 `plugins/testany-eng/skills/guide/references/workflow-map.yaml`，统一主流程、Prototype 可选分支与 Guardrails 横切分支的导航规则
+  - 新增 `plugins/testany-eng/skills/guide/references/artifact-detection.md`，细化 artifact 类型识别、状态归一化、审查证据与置信度规则
+  - 新增 `plugins/testany-eng/skills/guide/references/guide-examples.md`，提供典型导航场景的输入/输出样例
+  - 新增 `/testany-eng:guide` command 与 OpenAI agent interface
+
 - **testany-eng 测试闭环能力**：
   - 新增 `test-strategy-writer`：基于 PRD/API/HLD 定义独立测试策略
   - 新增 `test-strategy-reviewer`：审查测试策略的风险覆盖、测试分层、环境与门禁
@@ -27,6 +34,23 @@
   - 新增对应 CLI 测试，覆盖 PRD / Test Strategy / Test Spec profile 校验与 RTM 聚合
 
 ### 变更
+
+- **testany-eng 发现层更新**：
+  - plugin README 的快速选择区新增 `/guide` 入口，便于存量项目和新用户先做流程定位
+  - 仓库 README 新增 `/testany-eng:guide` 的命令入口、使用示例与 skill 描述
+  - 根目录 `marketplace.json` 与 `plugins/testany-eng/.claude-plugin/plugin.json` 更新为“研发流程与导航工具集”描述，并纳入 `/testany-eng:guide`
+
+- **testany-eng 国际化第一阶段**：
+  - 新增 `plugins/testany-eng/references/language-policy.md`，统一输出语言、模板选择和 `TRACEABILITY-METADATA` 英文保留规则
+  - active `testany-eng` skills 统一新增语言规则段，默认跟随用户输入语言输出
+  - `prd-reviewer` / `hld-reviewer` 将内嵌审查报告与准出证书模板抽离到 `references/report-templates*.md`
+  - BRD / Journey / PRD / HLD / LLD / Test Strategy / Test Spec / Runbook / Prototype 的直接输出模板新增英文对照文件 `*.en.md`
+  - reviewer 审查报告与准出证书模板新增英文对照文件 `*.en.md`
+  - `runbook-writer` 的 writer / reviewer prompts 显式传递 `output_language`
+
+- **testany-eng `prd-studio` 废弃标记**：
+  - `prd-studio` skill、command、README、marketplace 展示层统一标记为 deprecated
+  - 默认推荐路径改为 `/testany-eng:prd-writer` + `/testany-eng:prd-reviewer`
 
 - **testany-bot 自动化对象模型收敛**：
   - 新增 `automation-model.md`，统一 `traditional test scenario`、`platform case`、`pipeline`、`trigger` 四个对象的边界
@@ -57,6 +81,16 @@
 
 - **testany-bot 文档入口更新**：
   - `commands`、plugin README、根 README、marketplace、`plugin.json` 同步更新为新的 automation model 和 skill 边界
+
+### 移除
+
+- **删除已废弃的 `prd-studio`**：
+  - `testany-eng` 的命令列表、流程图、决策树和 plugin 描述不再展示 `prd-studio`
+  - `guide` 相关说明移除对 `prd-studio` 的特殊排除描述，流程事实源按当前仓库内容收口
+
+- **删除 `skill-creator`**：
+  - `testany-llm` 的命令列表和 plugin 描述改为仅保留 `prompt-optimizer`
+  - 根 README、`AGENTS.md`、`CLAUDE.md` 不再引用已删除的 `skill-creator` 脚本与路径
 
 ## [2.6.1] - 2026-02-01
 

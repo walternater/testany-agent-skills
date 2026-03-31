@@ -6,33 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Testany 公司的 Agent Skills 集合，为 Claude Code 提供产品研发流程中的专业技能。每个 skill 是独立的 plugin，包含 SKILL.md 和可选的 references/、scripts/、assets/ 资源。
 
-## 开发命令
+## 开发方式
 
-### 初始化新 Skill
-```bash
-python skills/skill-creator/scripts/init_skill.py <skill-name>
-# 默认输出到 skills/ 目录
-```
+当前仓库已不再内置 `skill-creator` 初始化 / 校验 / 打包脚本。
 
-### 验证 Skill 格式
-```bash
-python skills/skill-creator/scripts/quick_validate.py skills/<skill-name>
-```
-
-### 打包 Skill
-```bash
-python skills/skill-creator/scripts/package_skill.py skills/<skill-name>
-```
+- 新增或维护 skill 时，直接在对应 plugin 下编辑 `skills/<skill-name>/SKILL.md`
+- 如需暴露 slash command，同步维护对应 plugin 的 `commands/`
+- 发布前同步更新根目录 `README.md`、`.claude-plugin/marketplace.json`、plugin 级 `README.md` / `.claude-plugin/plugin.json` 与 `CHANGELOG.md`
 
 ## 架构
 
 ```
-.claude-plugin/marketplace.json    # 插件注册，每个 skill 独立为一个 plugin
-skills/
-├── prd-writer/                    # PRD 写作（5 个模板在 references/）
-├── skill-creator/                 # Skill 创建指南 + 3 个 Python 工具
-└── prompt-optimizer/              # 提示词优化（6 平台适配）
-spec/                              # Agent Skills 规范文档
+.claude-plugin/marketplace.json    # 插件注册与发现层描述
+plugins/
+├── testany-eng/                   # 研发流程工具集
+├── testany-llm/                   # AI/LLM 工具集
+├── testany-mrkt/                  # 营销内容工具集
+└── testany-bot/                   # Testany 测试平台工具集
 ```
 
 ## Skill 编写规范
@@ -62,9 +52,8 @@ spec/                              # Agent Skills 规范文档
 }
 ```
 
-## 规范文档
+## 文档维护
 
-详细规范见 `spec/` 目录：
-- `agent-skills-spec.md` - 规范总览
-- `skill-authoring.md` - 编写指南
-- `skill-client-integration.md` - 客户端集成
+- 以仓库根目录 `README.md` 与各 plugin README 为对外说明事实源
+- 以 `.claude-plugin/marketplace.json` 和各 plugin `plugin.json` 为安装发现层事实源
+- 新增、删除或重命名 skill 后，必须同步更新上述文档与 `CHANGELOG.md`

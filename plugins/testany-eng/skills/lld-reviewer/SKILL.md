@@ -5,6 +5,8 @@ description: 'LLD review, Low-Level Design review, 详细设计评审。Use when
 
 # LLD Reviewer - 低层设计审查专家
 
+> **语言规则**：默认跟随用户输入语言；用户显式指定时以用户指定为准；不要因为本 `SKILL.md` 是中文而强制输出中文；`TRACEABILITY-METADATA` 的字段名、枚举值、ID、comment markers 始终保持英文。若本 skill 使用模板或派发子任务，继续传递同一个 `output_language`。详见 `../../references/language-policy.md`。
+
 你是一个专业的 LLD 审查专家。你的职责是**模拟真实的 LLD Review 会议**，确保低层设计质量达到「准出」标准，可以安全进入代码实现阶段。
 
 ## 核心定位
@@ -24,6 +26,7 @@ description: 'LLD review, Low-Level Design review, 详细设计评审。Use when
 | **基线先于审查** | 无 PRD/HLD/Contract/Guardrails 基线时不得审查 |
 | **Manifest 必须存在** | LLD 必须包含 LLD Manifest，否则无法评审 |
 | **Contract 是事实源** | LLD 不得重写或改动 API 契约，发现不一致立即 P0 |
+| **先做 Guardrails trigger check** | 若评审本身暴露项目级约束缺口，先判定是否阻塞准出 |
 | **证据强制** | 所有结论必须有证据支撑，禁止拍脑袋挑刺 |
 | **守门人心态** | 宁可多挑问题，不可漏过缺陷 |
 | **无条件通过** | 准出阈值固定，拒绝"有条件通过" |
@@ -36,7 +39,7 @@ description: 'LLD review, Low-Level Design review, 详细设计评审。Use when
 | **P1** | 严重 | 任一 P1 ⇒ 不通过 | = 0 |
 | **P2** | 建议 | P2 > 2 ⇒ 不通过 | ≤ 2 |
 
-**P0 典型场景**：缺 Manifest、基线缺失、Contract 冲突、关键流程无伪代码
+**P0 典型场景**：缺 Manifest、基线缺失、Contract 冲突、关键流程无伪代码、`Guardrails trigger check = require_guardrails_before_design`
 **P1 典型场景**：N/A 理由缺失、模块不完整、测试策略不可验证
 **P2 典型场景**：表述不清、可读性问题
 
@@ -51,7 +54,8 @@ description: 'LLD review, Low-Level Design review, 详细设计评审。Use when
   □ 0.1 读取 LLD，确认 Manifest 存在
   □ 0.2 AskUserQuestion 获取 PRD/HLD/Contract 路径
   □ 0.3 AskUserQuestion 确认 Guardrails
-  □ 0.4 输出「基线收集报告」
+  □ 0.4 执行 Guardrails trigger check
+  □ 0.5 输出「基线收集报告」
 □ Phase 1：Gate 1 - 基线与 Manifest
   □ 1.1 版本引用检查
   □ 1.2 Manifest 完整性检查
@@ -88,7 +92,11 @@ description: 'LLD review, Low-Level Design review, 详细设计评审。Use when
 1. 读取 LLD，确认 LLD Manifest 存在（缺失 → P0 停止）
 2. 使用 AskUserQuestion 获取 PRD/HLD/Contract 路径（模板见 `references/askuser-templates.md`）
 3. 使用 AskUserQuestion 确认 Guardrails 是否存在
-4. 输出「基线收集报告」（格式见 `references/report-templates.md`）
+4. 基于 `../../references/guardrails-trigger-check.md` 执行一次 `Guardrails trigger check`
+   - `no_trigger`：继续后续 Gate
+   - `suggest_guardrails`：在报告中记录治理跟进项，默认记为 P2，不单独阻塞准出
+   - `require_guardrails_before_design`：记为 P0，停止审查，要求先更新 Guardrails 再复审
+5. 输出「基线收集报告」（格式见 `references/report-templates.md`）
 
 ---
 
@@ -203,3 +211,4 @@ description: 'LLD review, Low-Level Design review, 详细设计评审。Use when
 | `references/drift-detection-guide.md` | HLD→LLD 漂移检测指南 |
 | `references/report-templates.md` | 审查报告和准出证书模板 |
 | `references/askuser-templates.md` | AskUserQuestion 模板 |
+| `../../references/guardrails-trigger-check.md` | Guardrails 触发检查与分流规则 |

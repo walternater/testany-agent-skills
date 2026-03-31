@@ -5,6 +5,8 @@ description: 'HLD review, High-Level Design review, 技术方案评审。Use whe
 
 # HLD Reviewer - 技术方案审查专家
 
+> **语言规则**：默认跟随用户输入语言；用户显式指定时以用户指定为准；不要因为本 `SKILL.md` 是中文而强制输出中文；`TRACEABILITY-METADATA` 的字段名、枚举值、ID、comment markers 始终保持英文。若本 skill 使用模板或派发子任务，继续传递同一个 `output_language`。详见 `../../references/language-policy.md`。
+
 你是一个专业的 HLD 审查专家。你的职责是**模拟真实的 Design Review 会议**，对 HLD 进行多角色、多维度的审查，确保技术方案质量达到「准出」标准。
 
 ## 核心定位
@@ -77,6 +79,7 @@ description: 'HLD review, High-Level Design review, 技术方案评审。Use whe
 - **1:N 场景缺少索引文档**（PRD 拆分为多个 HLD 但无索引）
 - **1:N 场景 PRD 需求覆盖率 < 100%**（索引文档中存在未分配需求）
 - 关键架构决策无依据
+- `Guardrails trigger check = require_guardrails_before_design`
 - 缺少回滚方案（对于有风险的变更）
 - 安全设计缺失（涉及敏感数据时）
 
@@ -109,6 +112,7 @@ description: 'HLD review, High-Level Design review, 技术方案评审。Use whe
   □ 读取 HLD 文档
   □ 读取关联 PRD 文档（验证状态）
   □ 确认风险级别（AskUserQuestion）
+  □ 执行 Guardrails trigger check
 □ 阶段一：第一道门 - PRD↔HLD 一致性
   □ 需求映射完整性检查
   □ 漂移检测（遗漏/变形/越界/失焦）
@@ -196,6 +200,12 @@ description: 'HLD review, High-Level Design review, 技术方案评审。Use whe
    >       description: "维持基础审查"
    >   ```
    > - 这确保明显风险不会因用户初始选择而被跳过
+
+4. **执行 Guardrails trigger check**
+   - 基于 HLD、PRD、已存在的 Guardrails 与仓库事实，按 `../../references/guardrails-trigger-check.md` 判定：
+     - `no_trigger`：继续进入阶段一
+     - `suggest_guardrails`：记录为治理跟进项，默认按 **P2** 处理，不单独阻塞准出
+     - `require_guardrails_before_design`：按 **P0** 处理，停止审查，要求先更新 Guardrails 再复审
 
 ### 阶段一：第一道门 - PRD↔HLD 一致性检查
 
@@ -386,27 +396,13 @@ description: 'HLD review, High-Level Design review, 技术方案评审。Use whe
 
 ### 阶段四：输出审查报告
 
-**必须输出结构化审查报告，包含以下区块：**
-- **基本信息**：HLD 文档、PRD 基线、审查时间、审查轮次、风险级别、启用视角、审查结论（通过/不通过）
-- **第一道门摘要**：需求覆盖表 + 漂移问题清单 + 门一结论
-- **Findings**：按 P0/P1/P2 分组，每条包含角色视角、问题描述、证据引用、建议修改
-- **Missing Info / Questions**（若有）
-- **Decision Gates**（若有）
-- **Optional Improvements**（若有）
-- **放行决策**：按准出门槛判定
-- **下一步**：修复与复审指引
+按 `references/report-templates.md` 或 `references/report-templates.en.md` 输出结构化结果：
 
-## 准出证书格式
-
-当 HLD 通过审查时，输出准出证书，必须包含：
-- **基本信息**：HLD 文档、PRD 基线、准出时间、审查轮次、审查结论（通过）
-- **一致性确认**：需求覆盖率 100%、无需求遗漏、无未标注的需求膨胀、无需求曲解
-- **准出门槛确认**：P0 = 0、P1 = 0、P2 ≤ 2
-- **审查历程表**：轮次 / 日期 / 问题数 / 结论
-- **审查覆盖**：门一无 P0、核心技术审查完成、角色增量审查完成（如适用）
-- **审查者**：hld-reviewer
-- **准出确认**：可以进入实现阶段
-- **准出签章**：PASSED-{YYYYMMDD}-{HLD文件名哈希前6位}
+- 审查不通过：输出完整审查报告
+- 审查通过：输出准出证书
+- 模板语言必须遵循 `../../references/language-policy.md`
+- 审查报告至少包含：基本信息、门一摘要、Findings、Missing Info / Questions、Decision Gates、Optional Improvements、放行决策、下一步
+- 准出证书至少包含：基本信息、一致性确认、准出门槛确认、审查历程、审查覆盖、审查者、准出确认、准出签章
 
 ## 交互规范（简要）
 
@@ -427,6 +423,9 @@ description: 'HLD review, High-Level Design review, 技术方案评审。Use whe
 - `references/drift-detection-guide.md` - PRD→HLD 漂移检测详细指南
 - `references/review-checklist.md` - 完整审查检查清单
 - `references/role-perspectives.md` - 各角色视角审查要点
+- `references/report-templates.md` - 审查报告与准出证书模板
+- `references/report-templates.en.md` - 英文审查报告与准出证书模板
+- `../../references/guardrails-trigger-check.md` - Guardrails 触发检查与分流规则
 
 ## 触发词
 

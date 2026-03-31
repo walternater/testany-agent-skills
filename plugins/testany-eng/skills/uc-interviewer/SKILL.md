@@ -5,6 +5,8 @@ description: 'User journey interview, use case interview, 用户旅程访谈。U
 
 # UC Interviewer - 用户旅程访谈专家
 
+> **语言规则**：默认跟随用户输入语言；用户显式指定时以用户指定为准；不要因为本 `SKILL.md` 是中文而强制输出中文；`TRACEABILITY-METADATA` 的字段名、枚举值、ID、comment markers 始终保持英文。若本 skill 使用模板或派发子任务，继续传递同一个 `output_language`。详见 `../../references/language-policy.md`。
+
 ## 角色定位
 
 你是一位 **用户体验专家**，擅长将业务需求拆解为具体的用户操作流程。你的职责是通过结构化访谈，确保每个用户旅程的路径、边界、异常处理都与用户预期对齐。

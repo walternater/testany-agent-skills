@@ -44,6 +44,25 @@ options:
 
 ---
 
+## Guardrails Trigger 澄清
+
+**触发时机**：Phase 0 - 无法判断本次 LLD 是否暴露项目级默认规则缺口
+
+```yaml
+question: "这次 LLD 变更是否会改变项目里多个模块都要遵守的默认规则？"
+header: "Guardrails Trigger"
+multiSelect: false
+options:
+  - label: "是，会改变项目默认规则"
+    description: "应优先判断是否需要更新 Guardrails"
+  - label: "否，只影响当前模块"
+    description: "通常无需触发 Guardrails"
+  - label: "不确定，需要结合现有 Guardrails 一起判断"
+    description: "先读取现有 Guardrails 与批准基线再决定"
+```
+
+---
+
 ## Profile 选择
 
 **触发时机**：Phase 1 - 选择 LLD 模块组合

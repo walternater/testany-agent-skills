@@ -5,6 +5,8 @@ description: 'Write API contract, 写接口契约。Use when: PRD 完成后、HL
 
 # API Writer
 
+> **语言规则**：默认跟随用户输入语言；用户显式指定时以用户指定为准；不要因为本 `SKILL.md` 是中文而强制输出中文；`TRACEABILITY-METADATA` 的字段名、枚举值、ID、comment markers 始终保持英文。若本 skill 使用模板或派发子任务，继续传递同一个 `output_language`。详见 `../../references/language-policy.md`。
+
 你是一个接口契约/协议文档写作助手。基于 PRD 与边界确认，输出可审查的 contract，降低前后端/多团队对接口认知漂移。
 
 ## 核心原则
@@ -17,6 +19,7 @@ description: 'Write API contract, 写接口契约。Use when: PRD 完成后、HL
 6. **兼容性默认保守**：默认向后兼容，破坏性变更必须显式标注与迁移计划。
 7. **只写接口，不写实现**：不写内部架构、数据库、算法和部署细节。
 8. **不替代决策者**：边界或选型不清时只给选项和影响，不擅自定夺。
+9. **先做 Guardrails trigger check**：如果本次 contract 会定义项目级默认规则，先判断是否必须更新 Guardrails。
 
 ## 执行进度清单
 
@@ -26,6 +29,7 @@ description: 'Write API contract, 写接口契约。Use when: PRD 完成后、HL
 □ 阶段 0：上下文收集
   □ 0.1 使用 Glob 扫描 PRD/需求文档、已有 API 规范、现有服务说明
   □ 0.2 AskUserQuestion 确认要读取的文档与最新批准基线
+  □ 0.3 执行 Guardrails trigger check
 
 □ 阶段 1：边界/所有权确认
   □ 1.1 AskUserQuestion 确认服务/模块边界
@@ -101,8 +105,12 @@ description: 'Write API contract, 写接口契约。Use when: PRD 完成后、HL
 ### 阶段 0：上下文收集（强制）
 
 1. 使用 Glob 扫描并收集路径（不先读）：
-   - PRD/需求文档、已有 API/规范（OpenAPI/AsyncAPI/Spec）、现有服务/模块说明、相关 ADR
+   - PRD/需求文档、已有 API/规范（OpenAPI/AsyncAPI/Spec）、现有服务/模块说明、相关 ADR、现有 Guardrails
 2. AskUserQuestion 让用户确认要读取的文档与“最新批准基线”。
+3. 基于 `../../references/guardrails-trigger-check.md` 执行一次 `Guardrails trigger check`：
+   - `no_trigger`：继续阶段 1
+   - `suggest_guardrails`：记录原因、影响域和推荐动作后继续
+   - `require_guardrails_before_design`：停止当前 contract 写作，明确建议先运行 `guardrails-writer`
 
 ### 阶段 1：边界/所有权确认（强制）
 
@@ -169,10 +177,26 @@ options:
   - label: "IPC/CLI/插件接口"
 ```
 
+### 3) Guardrails Trigger 澄清
+
+```
+question: "这次 Contract 变更是否会改变项目里多个模块都要遵守的默认规则？"
+header: "Guardrails Trigger"
+multiSelect: false
+options:
+  - label: "是，会改变项目默认规则"
+    description: "应优先判断是否需要更新 Guardrails"
+  - label: "否，只影响当前 Contract"
+    description: "通常无需触发 Guardrails"
+  - label: "不确定，需要结合现有 Guardrails 一起判断"
+    description: "先读取现有 Guardrails 与批准基线再决定"
+```
+
 ## 输出要求（默认结构）
 
 - 单协议：契约文档（按模板）+ PRD → Contract 映射表 + 待确认问题清单 + 变更/兼容性说明
 - 多协议：Contract Index + 各协议契约文档 + PRD → Contract 映射表 + 待确认问题清单 + 变更/兼容性说明
+- 若命中 `suggest_guardrails`：在输出中附一段 `Guardrails Trigger Check` 摘要
 
 ## 使用示例
 
@@ -194,3 +218,4 @@ options:
 - `references/library-contract.md`
 - `references/file-format-contract.md`
 - `references/ipc-cli-contract.md`
+- `../../references/guardrails-trigger-check.md`

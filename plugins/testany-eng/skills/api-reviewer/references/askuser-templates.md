@@ -71,6 +71,25 @@ options:
 
 ---
 
+## Guardrails Trigger 澄清
+
+**触发时机**：Phase 0 - 无法判断本次 Contract 是否在改变项目级默认规则
+
+```yaml
+question: "这次 Contract 变更是否会改变项目里多个模块都要遵守的默认规则？"
+header: "Guardrails Trigger"
+multiSelect: false
+options:
+  - label: "是，会改变项目默认规则"
+    description: "应优先判断是否需要更新 Guardrails"
+  - label: "否，只影响当前 Contract"
+    description: "通常无需触发 Guardrails"
+  - label: "不确定，需要结合现有 Guardrails 一起判断"
+    description: "先读取现有 Guardrails 与批准基线再决定"
+```
+
+---
+
 ## 既有契约与复用确认
 
 **触发时机**：Phase 3 - 冲突与重复造轮子检查
