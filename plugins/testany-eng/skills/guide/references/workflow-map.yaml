@@ -73,6 +73,58 @@ artifacts:
   - id: GUARDRAILS
     filename_keywords: [guardrails, engineering-standards, engineering_standards]
 
+artifact_routes:
+  - artifact: BRD
+    creation_node: brd-interviewer
+    creation_command: /brd-interviewer
+  - artifact: USER_JOURNEY
+    creation_node: uc-interviewer
+    creation_command: /uc-interviewer
+    do_not_suggest: [/user-journey, /journey, /user-journey-interviewer]
+  - artifact: PRD
+    creation_node: prd-writer
+    creation_command: /prd-writer
+    review_node: prd-reviewer
+    review_command: /prd-reviewer
+  - artifact: API_CONTRACT
+    creation_node: api-writer
+    creation_command: /api-writer
+    review_node: api-reviewer
+    review_command: /api-reviewer
+  - artifact: HLD
+    creation_node: hld-writer
+    creation_command: /hld-writer
+    review_node: hld-reviewer
+    review_command: /hld-reviewer
+  - artifact: TEST_STRATEGY
+    creation_node: test-strategy-writer
+    creation_command: /test-strategy-writer
+    review_node: test-strategy-reviewer
+    review_command: /test-strategy-reviewer
+  - artifact: LLD
+    creation_node: lld-writer
+    creation_command: /lld-writer
+    review_node: lld-reviewer
+    review_command: /lld-reviewer
+  - artifact: TEST_SPEC
+    creation_node: test-spec-writer
+    creation_command: /test-spec-writer
+    review_node: test-reviewer
+    review_command: /test-reviewer
+  - artifact: RUNBOOK
+    creation_node: runbook-writer
+    creation_command: /runbook-writer
+  - artifact: PROTOTYPE
+    creation_node: prototype-designer
+    creation_command: /prototype-designer
+    review_node: prototype-reviewer
+    review_command: /prototype-reviewer
+  - artifact: GUARDRAILS
+    creation_node: guardrails-writer
+    creation_command: /guardrails-writer
+    review_node: guardrails-reviewer
+    review_command: /guardrails-reviewer
+
 nodes:
   - id: brd-interviewer
     lane: main

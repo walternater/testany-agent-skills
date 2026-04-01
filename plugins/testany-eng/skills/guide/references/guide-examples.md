@@ -259,6 +259,27 @@
 - 仓库已有 HLD / LLD / Runbook
 - 已有 `guardrails.md`，但内容未覆盖部署和审计
 
+## 示例 9：用户直接问阶段名，不要脑补命令别名
+
+### 用户输入
+
+> User Journey 的 skill 叫什么名字？
+
+### 正确判断
+
+- 用户问的是阶段 / artifact 对应的 canonical command
+- 应回查 `workflow-map.yaml` 或 `artifact_routes`
+- `USER_JOURNEY` 的创建命令是 `/uc-interviewer`
+- 不能因为 “User Journey” 更像自然语言，就改写成 `/user-journey`
+
+### 推荐输出
+
+```markdown
+User Journey 对应的 `testany-eng` skill 是 `/uc-interviewer`。
+
+它负责在 BRD 和 PRD 之间梳理、确认用户旅程与 use case；如果你已经有 BRD，下一步通常就是它。
+```
+
 ### 推荐输出
 
 ```markdown
@@ -268,4 +289,3 @@
 2. `/guardrails-reviewer`：规则更新后应做准出，形成新的治理基线。
 3. 之后再回到受影响的主流程节点，例如 `/runbook-writer` 或对应 reviewer。
 ```
-
