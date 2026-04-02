@@ -14,6 +14,7 @@
 ## 一句话边界
 
 - `test-spec` 产出的是**场景级测试设计**，不是 Testany 平台资产。
+- 当 `testany-eng` 的 Test Spec 已包含 `Testany Automation Handoff` 时，它就是进入 `testany-bot` 的首选上游输入。
 - Testany `case` 是**可复用的原子自动化步骤包**，不是传统语义下的完整测试场景。
 - `pipeline` 才是 Testany 的**执行与编排单元**。即使只有一个 platform case，要真正执行也仍然需要一条 pipeline。
 - `trigger` 是**执行入口**，不是编排层。它只决定“如何触发 pipeline”，不决定 pipeline 内部逻辑。
@@ -39,7 +40,7 @@
 ## 推荐职责链
 
 ```text
-test-spec / 用户需求
+approved test-spec (+ Testany Automation Handoff) / 用户需求
   -> testany-case-writing
      - 拆解 scenario
      - 生成 platform cases
@@ -75,6 +76,7 @@ test-spec / 用户需求
 ## 与 4 个核心 skill 的直接关系
 
 - `testany-case-writing` 必须先决定“场景要拆成几个 platform cases”，再写脚本和 ZIP。
+- 若上游提供 `Testany Automation Handoff`，`testany-case-writing` 应优先消费它，而不是从整篇 Test Spec 重新猜测拆分方式。
 - `testany-pipeline` 的主路径应消费上游的 decomposition 结果，而不是主要依赖猜测 case 描述。
 - `testany-trigger` 必须同时覆盖 persistent trigger（`Plan`、`Manual Trigger`、`Gatekeeper`）和 ad-hoc run now。
 - `testany-execution` 应负责 execution 发起之后的观测与管理，而不是再次承担 trigger 职责。

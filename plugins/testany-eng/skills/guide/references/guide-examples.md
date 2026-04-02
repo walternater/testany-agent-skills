@@ -259,7 +259,44 @@
 - 仓库已有 HLD / LLD / Runbook
 - 已有 `guardrails.md`，但内容未覆盖部署和审计
 
-## 示例 9：用户直接问阶段名，不要脑补命令别名
+### 推荐输出
+
+```markdown
+## 推荐下一步
+
+1. `/guardrails-writer`：你这次命中了 Guardrails 的强触发条件，应该先更新项目级部署/审计规则，明确哪些下游文档需要重审。
+2. `/guardrails-reviewer`：规则更新后应做准出，形成新的治理基线。
+3. 之后再回到受影响的主流程节点，例如 `/runbook-writer` 或对应 reviewer。
+```
+
+## 示例 9：Test Spec 已准出，且已具备 Testany Automation Handoff
+
+### 用户输入
+
+> Test Spec 已经 approved 了，我下一步想把它落成 Testany 自动化脚本，应该用哪个命令？
+
+### 观察到的证据
+
+- `test-spec.md` metadata 显示 `artifact.type: TEST_SPEC`，`status: approved`
+- 同一文档中存在 `## Testany Automation Handoff`
+- handoff YAML 中 `status: ready`
+- `recommended_entrypoint: /case-writing`
+- `scenario_groups` 已包含 `source_case_ids`、`recommended_executor`、`platform_case_strategy`
+
+### 推荐输出
+
+```markdown
+## 推荐下一步
+
+1. `/case-writing`：你当前目标是进入 Testany 自动化落地，而且 approved Test Spec 已经包含 `Testany Automation Handoff.status = ready`。这是最直接、最小返工的下一步。
+2. `/runbook-writer`：如果你同时也要补运维/发布准备资产，这仍然是并行合理路径；但它不替代自动化落地。
+
+## 待确认项
+
+- 暂未发现阻塞 `/case-writing` 的 handoff 缺口；如果后续要进入平台注册和编排，则再继续 `/case` → `/pipeline`。
+```
+
+## 示例 10：用户直接问阶段名，不要脑补命令别名
 
 ### 用户输入
 
@@ -278,14 +315,4 @@
 User Journey 对应的 `testany-eng` skill 是 `/uc-interviewer`。
 
 它负责在 BRD 和 PRD 之间梳理、确认用户旅程与 use case；如果你已经有 BRD，下一步通常就是它。
-```
-
-### 推荐输出
-
-```markdown
-## 推荐下一步
-
-1. `/guardrails-writer`：你这次命中了 Guardrails 的强触发条件，应该先更新项目级部署/审计规则，明确哪些下游文档需要重审。
-2. `/guardrails-reviewer`：规则更新后应做准出，形成新的治理基线。
-3. 之后再回到受影响的主流程节点，例如 `/runbook-writer` 或对应 reviewer。
 ```

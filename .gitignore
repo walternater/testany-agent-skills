@@ -24,6 +24,7 @@ __pycache__/
 PLAN-*.md
 temp.md
 testany-bot.md
+internal/
 
 # WIP plugins (not ready for release)
 plugins/testany-jira-wip/

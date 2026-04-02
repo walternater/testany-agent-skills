@@ -191,6 +191,29 @@ Guide 不需要做到“100% 自动理解所有文档”，但必须做到：
 - 标题含 `Test Spec` / `Test Package`
 - 内容含测试矩阵、详细 case、环境数据、追溯矩阵
 
+#### Testany Automation Handoff（嵌入于 TEST_SPEC）
+
+Guide 不把它当成独立 artifact，但在 `TEST_SPEC = approved` 时，应该额外检查文档中是否存在：
+
+- 标题 `Testany Automation Handoff`
+- 或 YAML block 顶层 key 为 `testany_automation_handoff`
+
+状态归一化：
+
+| 原始信号 | 归一化结果 |
+|----------|------------|
+| `status: ready` | automation branch `ready` |
+| `status: partial` | automation branch `partial` |
+| `status: not_planned` | automation branch `not_planned` |
+| section 缺失或无法解析 | automation branch `unknown` |
+
+使用规则：
+
+- `ready`：当用户目标涉及 Testany 自动化时，可以直接推荐 `/case-writing`
+- `partial`：可推荐 `/case-writing`，但要注明仍有 handoff 缺口
+- `not_planned`：默认保持文档主线，不主动推荐 `/case-writing`
+- `unknown`：若用户明确要 Testany 自动化，优先回到 `/test-spec-writer` 补 handoff；必要时才以 `low confidence` 推荐 `/case-writing`
+
 ### 9. RUNBOOK
 
 强信号：

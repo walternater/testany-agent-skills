@@ -70,6 +70,12 @@
 ## Gate 4：执行证据与残余风险
 - {结论与证据}
 
+## Downstream Handoff
+
+- **文档下游**：{`/runbook-writer` / 无}
+- **自动化下游**：{`/case-writing` / 无}
+- **说明**：{例如：当 `Testany Automation Handoff.status = ready` 时进入 `/case-writing`}
+
 ## 问题清单
 
 ### P0
@@ -98,4 +104,6 @@
 - **结论**：通过
 - **脚本校验**：`trace-lint` 通过，`trace-build-rtm` 无 build error
 - **说明**：{可进入测试执行阶段 / 可进入发布准备阶段}
+- **文档下游**：{`/runbook-writer` / 无}
+- **自动化下游**：{`/case-writing` / 无}
 ```

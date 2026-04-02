@@ -2,6 +2,8 @@ version: 1
 notes:
   - "Guardrails is cross-cutting, not a default mainline gate."
   - "Prototype is optional and only shown when repo or user intent justifies it."
+  - "Testany automation landing is optional and only shown when user intent or an approved Test Spec handoff justifies it."
+  - "Commands in the automation lane come from the sibling testany-bot plugin and are valid canonical commands for cross-plugin routing."
   - "Use artifact-detection.md for detailed recognition and confidence rules."
 
 states:
@@ -41,6 +43,8 @@ lanes:
     title: 主流程
   - id: prototype
     title: 可选 Prototype 分支
+  - id: automation
+    title: 可选 Testany 自动化落地分支
   - id: guardrails
     title: 横切 Guardrails 分支
 
@@ -292,7 +296,7 @@ nodes:
       - TEST_SPEC: exists
       - TEST_STRATEGY: preferred
     approves: TEST_SPEC
-    next: [runbook-writer]
+    next: [runbook-writer, case-writing]
 
   - id: runbook-writer
     lane: main
@@ -304,6 +308,66 @@ nodes:
       - TEST_SPEC: preferred
       - GUARDRAILS: optional
     produces: RUNBOOK
+    next: []
+
+  - id: case-writing
+    lane: automation
+    plugin: testany-bot
+    kind: writer
+    command: /case-writing
+    requires:
+      - TEST_SPEC: approved
+    show_when:
+      - explicit_testany_automation
+      - testany_automation_handoff_ready
+      - testany_automation_handoff_partial
+    produces: TESTANY_PLATFORM_CASE_PACKAGE
+    next: [case]
+
+  - id: case
+    lane: automation
+    plugin: testany-bot
+    kind: operator
+    command: /case
+    requires:
+      - TEST_SPEC: preferred
+    show_when:
+      - testany_platform_case_packages_ready
+    produces: TESTANY_REGISTERED_CASE
+    next: [pipeline]
+
+  - id: pipeline
+    lane: automation
+    plugin: testany-bot
+    kind: operator
+    command: /pipeline
+    requires:
+      - TEST_SPEC: preferred
+    show_when:
+      - testany_registered_cases_ready
+    produces: TESTANY_PIPELINE
+    next: [trigger]
+
+  - id: trigger
+    lane: automation
+    plugin: testany-bot
+    kind: operator
+    command: /trigger
+    requires: []
+    show_when:
+      - testany_pipeline_ready
+    produces: TESTANY_TRIGGER
+    next: [execution]
+
+  - id: execution
+    lane: automation
+    plugin: testany-bot
+    kind: operator
+    command: /execution
+    requires: []
+    show_when:
+      - testany_execution_exists
+    produces: TESTANY_EXECUTION
     next: []
 
   - id: guardrails-writer

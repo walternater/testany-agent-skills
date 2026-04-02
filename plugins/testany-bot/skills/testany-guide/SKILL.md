@@ -5,7 +5,7 @@ description: Testany 平台核心概念和配置参考
 
 # Testany 平台参考
 
-本 skill 提供 Testany 平台的核心概念参考。详细内容见 references/ 目录。
+本 skill 提供 Testany 平台的核心概念参考。详细内容见 references/ 目录。若上游来自 `testany-eng`，优先配合 approved Test Spec 中的 `Testany Automation Handoff` 一起使用。
 
 ## 核心实体关系
 

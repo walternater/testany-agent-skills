@@ -1,5 +1,5 @@
 ---
-description: Test spec, 测试规格/测试用例包。产出独立测试范围内完整的 test case package、追溯矩阵与执行说明
+description: Test spec, 测试规格/测试用例包。产出独立测试范围内完整的 test case package、追溯矩阵、执行说明与 Testany automation handoff
 argument-hint: <PRD 路径> <API Contract 路径> <HLD 路径> <LLD 路径> <Test Strategy 路径> [Guardrails 路径]
 ---
 
@@ -29,6 +29,7 @@ LLD → [Test Spec Writer] → Test Case Package → Test Reviewer
 - 环境、数据、依赖与证据要求
 - 开发内建验证前置条件
 - 回归包、Smoke 包、自动化建议
+- `Testany Automation Handoff`（供 `testany-bot` `/case-writing` 消费）
 
 ## 核心原则
 

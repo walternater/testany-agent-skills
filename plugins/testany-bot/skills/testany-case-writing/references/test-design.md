@@ -10,6 +10,7 @@
 
 **关键结论**：
 - `test-spec` 产出的是 `Traditional Test Scenario`
+- 若上游来自 `testany-eng`，优先读取其中的 `Testany Automation Handoff`，用它收敛 Scenario 分组、Executor 建议与 split hints
 - `testany-case-writing` 写的是 `Testany Platform Case`
 - 一个传统测试场景通常会拆成多个 platform cases，再由 pipeline 编排
 

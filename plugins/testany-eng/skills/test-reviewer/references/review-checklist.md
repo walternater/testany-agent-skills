@@ -44,6 +44,7 @@
 - API Contract 漂移判定所需证据是否完整
 - Smoke / Regression / Compatibility 分组是否明确
 - 自动化建议是否与风险匹配
+- 若 `Testany Automation Handoff.status != not_planned`，其 scenario_groups / executor / split / relay / dependency / pipeline_required 是否完整
 
 ## Gate 4：执行证据与残余风险
 

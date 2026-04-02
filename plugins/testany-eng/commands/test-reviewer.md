@@ -5,7 +5,7 @@ argument-hint: <Test Spec 路径> <Test Strategy 路径> [执行摘要/缺陷清
 
 # Test Reviewer
 
-启动测试门禁评审流程。检查独立测试包是否完整、可执行、与上游基线一致；在发布前模式下，同时检查执行证据与残余风险。
+启动测试门禁评审流程。检查独立测试包是否完整、可执行、与上游基线一致；在发布前模式下，同时检查执行证据与残余风险，并在通过时给出文档下游与 Testany 自动化下游建议。
 
 ## 使用方式
 
@@ -16,7 +16,7 @@ $ARGUMENTS
 ## 在研发流程中的位置
 
 ```text
-Test Spec → [Test Reviewer] → 测试准出 → 发布准备
+Test Spec → [Test Reviewer] → 测试准出 → Runbook / Testany automation landing
 ```
 
 ## 审查框架
@@ -38,6 +38,7 @@ Test Spec → [Test Reviewer] → 测试准出 → 发布准备
 
 - 审查报告
 - 准出证书（通过时）
+- 下游 handoff 建议（通过时）
 
 ## 强制脚本校验
 

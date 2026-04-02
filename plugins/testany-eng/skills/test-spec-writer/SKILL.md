@@ -213,6 +213,7 @@ writer 至少要做到：
 - 清理动作
 - 自动化建议
 - 必需证据
+- Testany Automation Handoff 所需信息（若该 case 会进入 Testany 落地）
 
 同时补齐：
 
@@ -220,6 +221,7 @@ writer 至少要做到：
 - Critical Regression 包
 - Compatibility Regression 包
 - 非功能验证范围与方法
+- 面向 `testany-bot` `/case-writing` 的 `Testany Automation Handoff`
 - 不纳入本轮的内容及理由
 
 ---
@@ -241,11 +243,15 @@ writer 至少要做到：
 3. 检查是否新增了无来源依据的测试目标；如有，标记为待确认
 4. 检查每个 case 是否具备可执行前置条件、数据、依赖、判定方式
 5. 检查是否误把 API Contract 验证降级为前置条件，或仅引用开发自测代替详细 case；如有，补回 package
-6. 使用 `references/test-package-template.md` 输出最终文档
-7. 对已保存的文档执行：
+6. 按 `../../references/testany-automation-handoff-contract.md` 输出 `Testany Automation Handoff`：
+   - 即使当前不计划落到 Testany，也要显式写 `status: not_planned`
+   - 若计划落到 Testany，至少给出 `scenario_groups`、`recommended_executor`、`platform_case_strategy`、`pipeline_required`
+   - 若 `status: ready`，则 handoff 应足以让 `/case-writing` 直接开始工作
+7. 使用 `references/test-package-template.md` 输出最终文档
+8. 对已保存的文档执行：
    - `python3 plugins/testany-eng/scripts/trace_lint.py --format json <Test Spec 路径>`
    - `python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <PRD 路径> <Test Strategy 路径> <Test Spec 路径>`
-8. 若 `trace-lint` 有 blocking issue，或 `trace-build-rtm` 存在 duplicate ID / unresolved target / unresolved relation.from，则必须先修正文档与 metadata
+9. 若 `trace-lint` 有 blocking issue，或 `trace-build-rtm` 存在 duplicate ID / unresolved target / unresolved relation.from，则必须先修正文档与 metadata
 
 ## 覆盖率口径（强制）
 
@@ -334,6 +340,7 @@ writer 至少要做到：
 2. 存在多个合理行为解释，文档无法判定
 3. 环境或依赖能力会直接影响用例设计
 4. 回归范围或自动化优先级需要业务取舍
+5. 是否计划把本包继续落到 Testany 自动化，会影响 `Testany Automation Handoff.status`
 
 ### 问题设计原则
 
@@ -355,6 +362,7 @@ writer 至少要做到：
 - 环境/数据/依赖与证据要求
 - 开发内建验证前置条件
 - 回归与自动化建议
+- `Testany Automation Handoff`
 - 假设、豁免、待确认项
 
 ## 质量标准
@@ -369,6 +377,7 @@ writer 至少要做到：
 - 不侵入开发内建质量层职责
 - `trace-lint` 通过，且 `trace-build-rtm` 无 build error
 - 可直接交给 `test-reviewer` 做门禁评审
+- 若声明 `Testany Automation Handoff.status = ready`，则可直接交给 `testany-bot` 的 `/case-writing`
 
 ## 使用示例
 
@@ -391,5 +400,6 @@ writer 至少要做到：
 - `../../references/traceability-schema/test-spec-profile-v1.example.yaml`：Test Spec profile 示例
 - `../../references/traceability-schema/trace-lint-contract-v1.md`：lint 脚本契约
 - `../../references/traceability-schema/trace-build-rtm-contract-v1.md`：RTM 聚合脚本契约
+- `../../references/testany-automation-handoff-contract.md`：Test Spec 到 `testany-bot` 的下游 handoff 契约
 - `references/test-package-template.md`：测试规格与 test case package 模板
 - `references/askuser-templates.md`：基线确认与范围确认模板

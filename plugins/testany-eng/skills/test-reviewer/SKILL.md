@@ -17,6 +17,7 @@ description: 'Review test design and readiness, 测试评审。Use when: Test Sp
 - ✅ 审查开发内建验证前置条件与 QA API Contract 验证边界是否正确
 - ✅ 审查执行结果、缺陷状态、豁免与残余风险（如果已提供）
 - ✅ 给出通过/不通过结论
+- ✅ 在通过时明确输出文档下游与自动化下游 handoff 建议
 - ❌ 不代写 test package
 - ❌ 不替发布负责人做业务决策
 - ❌ 不对 unit、code-level integration 或 provider-side contract harness 的详细设计与实现负责
@@ -164,6 +165,7 @@ python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <PRD 路径
 - 预期结果、断言点、清理动作是否清晰（缺失 → P1）
 - 证据要求是否足以支持后续判断（缺失 → P1）
 - API Contract 漂移判定所需的响应样本、错误样本、权限/幂等等证据要求是否完整（缺失 → P1）
+- 若存在 `Testany Automation Handoff` 且 `status != not_planned`，其 executor / split / dependency / relay / pipeline_required 是否足以支撑 `/case-writing`（缺失 → P1）
 - Smoke / Regression / Compatibility 分组是否明确（缺失 → P2）
 
 ---
@@ -192,6 +194,9 @@ python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <PRD 路径
 - **通过**：输出准出证书，并明确是：
   - `测试设计准出`
   - 或 `测试门禁通过`
+  - 同时补充 downstream handoff：
+    - 文档下游：`/runbook-writer`
+    - 若 `Testany Automation Handoff.status = ready | partial`：自动化下游 `/case-writing`
 
 ## 交互规范
 
@@ -228,3 +233,4 @@ python3 plugins/testany-eng/scripts/trace_build_rtm.py --format json <PRD 路径
 - `../../references/traceability-schema/traceability-schema-v1.md`：traceability canonical schema
 - `../../references/traceability-schema/trace-lint-contract-v1.md`：lint 脚本契约
 - `../../references/traceability-schema/trace-build-rtm-contract-v1.md`：RTM 聚合脚本契约
+- `../../references/testany-automation-handoff-contract.md`：Test Spec 到 `testany-bot` 的下游 handoff 契约

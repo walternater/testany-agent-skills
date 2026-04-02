@@ -1,5 +1,5 @@
 ---
-description: Guide, workflow guide, 流程导航。扫描项目文档与准出状态，判断当前所处阶段并推荐下一步 testany-eng skill
+description: Guide, workflow guide, 流程导航。扫描项目文档与准出状态，判断当前所处阶段并推荐下一步 skill；当 Test Spec 已具备下游 handoff 时，也可推荐进入 testany-bot 自动化分支
 argument-hint: [项目/目录路径] [可选：补充上下文]
 ---
 
@@ -9,7 +9,7 @@ argument-hint: [项目/目录路径] [可选：补充上下文]
 
 - 现在主流程走到哪一步
 - 哪些关键基线已经具备
-- 下一步最适合运行哪个 `testany-eng` skill
+- 下一步最适合运行哪个 skill / downstream workflow
 
 ## 使用方式
 
@@ -29,6 +29,10 @@ $ARGUMENTS
 ```text
 BRD -> User Journey -> PRD -> API Contract -> HLD -> Test Strategy -> LLD -> Test Spec -> Test Review -> Runbook
 ```
+
+### 可选 downstream 分支
+
+- Testany Automation Landing：`/case-writing -> /case -> /pipeline -> /trigger -> /execution`
 
 ### 可选分支
 

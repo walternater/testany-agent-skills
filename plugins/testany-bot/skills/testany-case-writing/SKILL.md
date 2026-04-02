@@ -19,6 +19,33 @@ argument-hint: "[需求描述]，如：根据 test spec 拆解登录场景、把
 
 ---
 
+## 上游输入优先级
+
+按以下优先级选择输入模式：
+
+1. **Primary：approved Test Spec + `Testany Automation Handoff`**
+   - 来自 `testany-eng`
+   - `Testany Automation Handoff.status = ready | partial`
+   - 这是本 skill 的首选输入
+2. **Secondary：approved Test Spec，但没有 handoff**
+   - 可以继续，但需要自己补做 scenario grouping / executor / split decisions
+3. **Fallback：用户自然语言 / 现有测试设计文档**
+   - 仅在前两者都没有时使用
+
+如果输入来自 Test Spec，优先参考：
+
+- `../../../testany-eng/references/testany-automation-handoff-contract.md`
+- `Testany Automation Handoff` section 中的 `scenario_groups`
+- `source_case_ids`、`recommended_executor`、`platform_case_strategy`
+
+若输入 Test Spec 仍是 `draft` / `in_review`：
+
+- 默认不要直接把它当正式自动化基线
+- 应先建议用户完成 `testany-eng` 的 `/test-reviewer`
+- 只有当用户明确接受 exploratory / 草案态自动化拆分时，才继续，并显式标注为低置信度
+
+---
+
 ## 先统一心智模型
 
 在开始之前，先按 [automation-model.md](../testany-guide/references/automation-model.md) 理解对象边界：
@@ -36,7 +63,7 @@ argument-hint: "[需求描述]，如：根据 test spec 拆解登录场景、把
 
 ## 职责
 
-- 消费传统测试场景输入：用户自然语言、`test-spec`、现有测试设计文档
+- 消费传统测试场景输入：approved `test-spec`、`Testany Automation Handoff`、用户自然语言、现有测试设计文档
 - 判断一个场景要拆成几个 Testany platform cases
 - 为每个 platform case 选择合适的 Executor
 - 生成每个 platform case 的 metadata、脚本和 ZIP 包
@@ -54,17 +81,39 @@ argument-hint: "[需求描述]，如：根据 test spec 拆解登录场景、把
 
 ## 工作流程
 
+### Phase 0: 判定输入模式与可信度
+
+如果输入来自 Test Spec，先检查：
+
+1. Test Spec 是否为 `approved`
+2. 是否存在 `Testany Automation Handoff`
+3. `Testany Automation Handoff.status` 是 `ready`、`partial` 还是 `not_planned`
+
+处理规则：
+
+- `ready`：把 handoff 当作**第一优先输入**
+- `partial`：把 handoff 当作基线，并集中追问 `open_questions`
+- `not_planned`：默认不要继续；只有用户明确要求覆盖该决定时才继续
+- section 缺失：降级为 Secondary 模式，从 Test Spec 正文补做 decomposition
+
 ### Phase 1: 理解输入场景
 
 优先收集以下信息：
 1. 场景目标：要验证什么业务行为或系统行为
-2. 输入来源：来自 `test-spec`、用户口述，还是已有测试文档
+2. 输入来源：来自 approved `test-spec`、`Testany Automation Handoff`、用户口述，还是已有测试文档
 3. 技术约束：API / UI / Java / Python / Postman / Playwright
 4. 关键依赖：登录态、创建资源、清理动作、失败分支、回滚动作
 
 ### Phase 2: 先做 decomposition，再写代码
 
 必须先判断一个传统测试场景在 Testany 平台上应拆成几个 platform cases。
+
+若上游已经给出 `Testany Automation Handoff`：
+
+- 优先沿用 `scenario_groups`
+- 优先沿用 `recommended_executor`
+- 优先沿用 `platform_case_strategy`
+- 只有当 handoff 与 Test Spec 正文明显冲突时，才回退到人工重新分解，并把冲突显式回报给用户
 
 优先拆成多个 platform cases 的情况：
 - 某一步会产出 relay 输出给下游复用
@@ -97,6 +146,7 @@ argument-hint: "[需求描述]，如：根据 test spec 拆解登录场景、把
 完成 case package 后，必须显式说明：
 - 本次共拆出多少个 platform cases
 - 每个 case 的职责、输入、输出、executor
+- 每个 case 对应的 `source_case_ids`
 - 哪些 case 之间存在依赖
 - 是否需要 relay
 - 是否需要 `testany-pipeline` 继续编排
@@ -124,6 +174,7 @@ argument-hint: "[需求描述]，如：根据 test spec 拆解登录场景、把
 
 对每个 platform case 给出：
 - 别名 / 本地文件名
+- `source_case_ids`
 - 目标动作
 - executor
 - 输入变量
@@ -217,6 +268,7 @@ Relay 是 **pipeline 层编排 + case 层输出配置** 的组合能力。只有
 3. 哪些 case 需要注册到 Testany
 4. 是否必须继续到 `testany-pipeline`
 5. 如宿主支持 slash command，可建议 `/testany-case` 和 `/testany-pipeline`
+6. 若本次输入来自 Test Spec，应明确回显所消费的 `source_case_ids` 与 `scenario_groups`
 
 ---
 

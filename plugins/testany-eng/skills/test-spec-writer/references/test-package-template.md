@@ -145,6 +145,47 @@ waivers: []
 ### 非功能验证
 - {范围与方法}
 
+## Testany Automation Handoff
+
+> 即使当前不计划落到 Testany，也要保留本节，并显式写 `status: not_planned`。字段定义见 `../../references/testany-automation-handoff-contract.md`。
+
+```yaml
+testany_automation_handoff:
+  status: ready | partial | not_planned
+  recommended_entrypoint: /case-writing | none
+  source_test_spec:
+    artifact_id: {TSPEC-ID}
+    version: {vX.Y}
+    status: approved | draft | in_review
+  scenario_groups:
+    - id: AUTO-{nnn}
+      title: {场景组标题}
+      objective: {验证目标}
+      source_case_ids: [{CASE-ID}, {CASE-ID}]
+      priority: P0 | P1 | P2
+      recommended_executor: pyres | postman | playwright | maven | gradle
+      platform_case_strategy: single_case | split_cases
+      pipeline_required: true
+      suggested_platform_cases:
+        - alias: {短别名}
+          role: setup | action | assertion | cleanup | negative_path
+          purpose: {职责}
+          consumes: [{ENV_VAR}]
+          produces: [{OUTPUT_VAR}]
+      dependencies:
+        - { from: {ALIAS}, to: {ALIAS}, condition: whenPassed }
+      relay_map:
+        - { from: {ALIAS}.{OUTPUT}, to: {ALIAS}.{ENV} }
+      branching:
+        - { from: {ALIAS}, to: {ALIAS}, condition: whenFailed / expect_fail }
+      labels: [{label}]
+      runtime_hints:
+        preferred_runtime: {cloudprime / 其他}
+        notes: {限制/说明}
+  open_questions:
+    - {待确认项；无则留空数组}
+```
+
 ## 假设、豁免、待确认项
 
 | 类型 | 内容 | 影响 | Owner | 截止时间 |

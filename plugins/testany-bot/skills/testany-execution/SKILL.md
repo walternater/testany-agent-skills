@@ -62,7 +62,7 @@ argument-hint: "[execution_key / pipeline_key / 操作]，如：查看 Y2K-0601-
 
 | 状态 | 值 | 含义 | 是否终态 |
 |------|-----|------|---------|
-| NOT_STARTED | -1 | 未开始/排队中 | 否 |
+| NOT_STARTED | -1 | 未开始/排队中（等待并发槽位） | 否 |
 | RUNNING | 0 | 执行中 | 否 |
 | SUCCESS | 1 | 全部通过 | 是 |
 | FAILURE | 2 | 有失败 | 是 |
@@ -70,6 +70,22 @@ argument-hint: "[execution_key / pipeline_key / 操作]，如：查看 Y2K-0601-
 | FAIL_AS_EXPECTED | 4 | 预期失败（仅 Case） | 是 |
 | CANCELLED | 5 | 已取消 | 是 |
 | ERROR | 99 | 系统错误 | 是 |
+
+### Workspace 队列状态
+
+Testany 使用 workspace 级并发槽位（Redis semaphore）控制 execution 并行度。通过 `testany_get_workspace_execution_status` 可获取：
+
+| 字段 | 含义 |
+|------|------|
+| `limit` | workspace 并发上限（Community=2, Paid=4, Enterprise=8，可调） |
+| `claimed` | 正在执行的 execution key 列表（已占据槽位） |
+| `pending` | 排队中的 execution key 列表（等待槽位） |
+
+**当用户的 execution 状态为 NOT_STARTED 且长时间不变时**，应主动查询队列状态：
+- `claimed` 数量 = `limit` → 槽位已满，该 execution 在 `pending` 中排队
+- `claimed` 中有长时间运行的旧 execution → 旧执行占住了槽位
+
+**当用户问"为什么我的 execution 不跑"时**，这是第一个要检查的方向，优先于检查 YAML 和 relay。
 
 ### 本 skill 的标准处理链
 
@@ -142,7 +158,26 @@ trigger 已返回 execution_key
 2. 仅当状态仍是未开始 / pending 时，调用 `testany_cancel_execution`
 3. 如果已经开始运行，明确告知不能取消
 
-### 5. 将失败执行交给 debug
+### 5. 查看队列状态 / 诊断 execution 排队
+
+适用输入：
+- "为什么我的 execution 不跑"
+- "YAML 是并行的但执行串行了"
+- "看一下队列状态"
+- "execution 一直 NOT_STARTED"
+
+处理方式：
+1. `testany_get_workspace_execution_status` → 获取 limit / claimed / pending
+2. 判断并报告：
+   - claimed 数量是否 = limit（槽位满）
+   - 用户关注的 execution 是否在 pending 列表中
+   - claimed 中是否有长时间运行的旧 execution 占住槽位
+3. 如果槽位未满但 case 仍串行执行：
+   - 提示用户检查 pipeline YAML 版本（rule/v1.2 不支持 case 级并行）
+   - 建议查看 case 的 start_time/finish_time 确认是否被串行调度
+   - 如需深入分析，切到 `testany-debug`（调度/队列诊断分支）
+
+### 6. 将失败执行交给 debug
 
 适用输入：
 - “这个执行为什么失败”

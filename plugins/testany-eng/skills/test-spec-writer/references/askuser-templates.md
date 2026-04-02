@@ -46,3 +46,18 @@ options:
   - label: "高价值非功能"
     description: "优先保护性能、安全、恢复能力"
 ```
+
+## 4. Testany 落地确认
+
+```yaml
+question: "这份 test package 评审通过后，是否计划继续落到 Testany 自动化？"
+header: "Testany 落地"
+multiSelect: false
+options:
+  - label: "是，评审后立即落到 Testany"
+    description: "输出 `Testany Automation Handoff.status = ready`，为 `/case-writing` 准备下游输入"
+  - label: "可能后续要落到 Testany"
+    description: "输出 `status = partial`，显式列出缺失信息与 open questions"
+  - label: "暂不计划落到 Testany"
+    description: "仍保留 handoff section，但写 `status = not_planned`"
+```

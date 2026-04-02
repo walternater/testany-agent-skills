@@ -1,5 +1,5 @@
 ---
-description: Testany Pipeline，基于 decomposition 或现有 case keys 创建执行与编排单元
+description: Testany Pipeline，基于 decomposition 或现有 case keys 创建执行与编排单元；推荐消费 case-writing 基于 approved Test Spec handoff 产出的结果
 argument-hint: <操作> <描述>，如：根据 decomposition 创建流水线、配置 relay、更新执行顺序
 ---
 

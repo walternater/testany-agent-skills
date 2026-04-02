@@ -1,6 +1,6 @@
 # Testany Bot - 通用版
 
-Testany 测试平台智能助手，支持 platform case 编写与注册、pipeline 编排、执行监控、故障诊断、CI/CD 集成。
+Testany 测试平台智能助手，支持 platform case 编写与注册、pipeline 编排、执行监控、故障诊断、CI/CD 集成。它既可以直接消费自然语言测试需求，也可以消费 `testany-eng` 产出的 approved Test Spec 与 `Testany Automation Handoff`。
 
 ## 兼容性
 
@@ -19,6 +19,25 @@ Testany 测试平台智能助手，支持 platform case 编写与注册、pipeli
 
 - Testany MCP Server 已配置并运行
 - 已获取 Testany 平台访问权限
+
+## 推荐上游输入
+
+如果你已经使用 `testany-eng` 走完文档主线，推荐按以下顺序进入 `testany-bot`：
+
+```text
+approved Test Spec (+ Testany Automation Handoff)
+  -> /case-writing
+  -> /case
+  -> /pipeline
+  -> /trigger
+  -> /execution
+```
+
+推荐原因：
+
+- `Testany Automation Handoff` 已把 `source_case_ids`、executor 建议、split hints、relay / dependency 信息显式化
+- `/case-writing` 不必从整篇 Test Spec 重新猜测如何拆成 platform cases
+- 这样可以减少 `testany-eng` 与 `testany-bot` 之间的语义漂移
 
 ## 目录结构
 
@@ -55,7 +74,7 @@ testany-bot/
 | 技能 | 描述 | 主要操作 |
 |------|------|---------|
 | **testany-case** | Platform Case 注册与管理 | 注册 case package、更新 metadata、上传脚本、管理生命周期 |
-| **testany-case-writing** | Platform Case 编写 | 将传统测试场景拆解为 Testany platform cases，并生成可注册 case packages |
+| **testany-case-writing** | Platform Case 编写 | 将传统测试场景拆解为 Testany platform cases，并生成可注册 case packages；优先消费 approved Test Spec + handoff |
 | **testany-pipeline** | 流水线编排 | 基于 decomposition 或 case keys 创建 Pipeline，配置依赖、Relay 和分支 |
 | **testany-execution** | Execution 管理 | 查看进度、查历史、刷新状态、取消未开始执行 |
 | **testany-debug** | 故障诊断 | 分析失败原因，查看日志 |
@@ -69,7 +88,7 @@ testany-bot/
 
 ```
 /case 把这些 ZIP 和 metadata 注册成 Testany cases
-/case-writing 把登录场景拆成可上传到 Testany 的 cases
+/case-writing 根据 approved test spec 的 Testany Automation Handoff 生成可上传到 Testany 的 cases
 /pipeline 根据 decomposition 把登录和查询 cases 组成流水线
 /trigger 立即执行 Y2K-0601
 /execution 查看 Y2K-0601-0000B
@@ -81,6 +100,7 @@ testany-bot/
 ### 自然语言
 
 ```
+根据 approved test spec 里的 handoff 帮我生成 Testany cases
 帮我把这些自动化脚本注册成 Testany cases
 现在立刻执行一次回归测试流水线
 看看刚才那次 execution 跑到哪了
