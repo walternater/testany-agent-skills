@@ -407,30 +407,36 @@ description: 'Write PRD, 写产品需求文档。Use when: 需要写新功能 PR
 
 ### 阶段 0.9：User Journey 文档处理（当提供时）
 
-当用户提供 User Journey 文档（来自 `uc-interviewer` 的输出）时，**必须优先使用已对齐的 journey 内容**。
+当用户提供 User Journey 文档（来自 `uc-interviewer` 的输出）时，**必须优先使用其中已确认的 journey 内容**。
 
 #### 为什么 User Journey 文档重要
 
 User Journey 文档是 BRD→PRD 之间的**对齐检查点**：
-- 用户已逐条确认了主流程、替代路径、异常处理、边界情况
-- 这些内容**已经与用户对齐**，不需要 prd-writer 重新推断
+- 用户已逐条确认了主流程、跳转/分支、异常处理、步骤级 edge case matrix
+- 若 metadata 显示 `artifact.status=approved`，这些内容可视为已锁定 baseline
 - 直接使用可避免"不是用户想要的"问题
 
 #### 处理规则
 
 **强制规则**：
 1. **读取并理解** User Journey 文档的全部内容
-2. **直接采用** Journey 中已确认的内容：
+2. **优先读取 metadata**，判断 `artifact.id / artifact.status / source_documents / FLOW-* / relations`
+3. **按状态消费**：
+   - `approved`：作为锁定 baseline，默认不得改写
+   - `in_review` / `draft`：只能作为高价值参考；若会影响需求正确性，先提示风险并建议回到 `/uc-interviewer`
+   - 无 metadata：不得宣称“已对齐”，只能按普通参考材料使用
+4. **直接采用** Journey 中已确认的内容：
    - 主流程步骤 → PRD 的功能需求
-   - 替代路径 → PRD 的功能需求（标注为替代流程）
+   - 跳转/分支 → PRD 的功能需求（标注为分支或跨 Journey 依赖）
    - 异常处理 → PRD 的业务规则
-   - 边界情况 → PRD 的边界说明
-3. **不得修改或重新推断** 已对齐的内容，除非用户明确要求
-4. **保持追溯** 在 PRD 中标注需求来源于哪个 Journey
+   - 步骤级 edge case matrix → PRD 的边界说明、用户交互规则、恢复规则
+5. **不得修改或重新推断** `approved` Journey 的已确认内容，除非用户明确要求
+6. **保持追溯** 在 PRD 中标注需求来源于哪个 Journey / Step / Edge Case
 
 **禁止行为**：
 - ❌ 忽略 User Journey 文档，自行推断用户流程
-- ❌ 修改已对齐的流程步骤
+- ❌ 把 `draft / in_review / 无 metadata` 的 Journey 当作锁定基线
+- ❌ 修改 `approved` Journey 的已对齐流程步骤
 - ❌ 添加 User Journey 中没有的流程（除非用户明确要求）
 
 #### Journey → PRD 映射
@@ -439,9 +445,9 @@ User Journey 文档是 BRD→PRD 之间的**对齐检查点**：
 |-------------|----------|----------|
 | Journey 基本信息（谁、做什么） | 用户故事 | 直接采用 |
 | 主流程步骤 | 功能需求 | 逐步转化为需求项 |
-| 替代路径 | 功能需求（替代流程） | 标注为可选路径 |
+| 跳转/分支 | 功能需求（分支流程） | 标注为分支、依赖或跨 Journey 流转 |
 | 异常处理 | 业务规则 / 异常处理 | 转化为规则描述 |
-| 边界情况 | 边界说明 / 约束 | 明确边界行为 |
+| 步骤级 edge case matrix | 边界说明 / 用户交互规则 / 恢复规则 | 保留 Journey ID / Step ID / Edge Case ID 追溯 |
 | 优先级（P0/P1/P2） | 需求优先级 | 继承优先级标注 |
 
 #### PRD 元信息补充
@@ -455,7 +461,8 @@ User Journey 文档是 BRD→PRD 之间的**对齐检查点**：
 |------|------|
 | User Journey 来源 | [User Journey 文件路径] |
 | 已对齐 Journey | Journey 1, Journey 2, ... |
-| 对齐状态 | 已通过 uc-interviewer 对齐 |
+| Journey Artifact ID | JOURNEY-xxx |
+| 对齐状态 | approved / in_review / draft / no-metadata |
 ```
 
 ---

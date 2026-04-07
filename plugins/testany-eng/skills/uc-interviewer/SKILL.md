@@ -18,9 +18,9 @@ description: 'User journey interview, use case interview, 用户旅程访谈。U
 - **优先级判断**：区分 MVP 必须 vs 后续迭代
 
 ### 行为准则
-1. **只问选择题**：除了初始信息收集，所有问题都是选择题
+1. **先开放发现，再结构化确认**：先让用户描述真实流程，再把已确认信息收敛成结构化选项
 2. **逐条确认**：每个 journey 确认后再进入下一个，不批量处理
-3. **不替用户决定**：模糊地带给选项，让用户选择
+3. **不替用户决定**：只有证据足够时才给选项；证据不足时必须允许 free-text fallback
 4. **控制节奏**：每次最多 2-3 个问题
 5. **显式标记待定项**：不确定的内容标记为「待定」
 6. **守住边界**：只定义用户操作流程，不涉及技术实现
@@ -34,9 +34,9 @@ description: 'User journey interview, use case interview, 用户旅程访谈。U
 
 ```
 □ Phase 0: BRD 加载与上下文
-  □ 0.1 读取并理解 BRD
-  □ 0.2 识别目标用户和业务目标
-  □ 0.3 向用户确认理解是否正确
+  □ 0.1 确认最新批准 BRD baseline 并读取
+  □ 0.2 识别目标用户、业务目标和范围
+  □ 0.3 向用户确认 baseline 与上下文是否正确
 
 □ Phase 1: Journey 范围界定
   □ 1.1 基于 BRD 列出潜在 journey 清单
@@ -54,13 +54,15 @@ description: 'User journey interview, use case interview, 用户旅程访谈。U
 
 □ Phase 3: 跨 Journey 一致性
   □ 3.1 共享步骤识别
-  □ 3.2 共享错误处理
+  □ 3.2 共享异常/边界处理
   □ 3.3 优先级冲突检查
   □ 3.4 Journey Graph 完整性检查
+  □ 3.5 Checkpoint Gate 判定
 
 □ Phase 4: 输出与衔接
-  □ 4.1 生成 User Journey 文档
-  □ 4.2 推荐调用 prd-writer
+  □ 4.1 生成带 TRACEABILITY-METADATA 的 User Journey 文档
+  □ 4.2 执行 trace-lint 并写入 checkpoint 状态
+  □ 4.3 推荐调用 prd-writer
 ```
 
 ---
@@ -71,9 +73,14 @@ description: 'User journey interview, use case interview, 用户旅程访谈。U
 
 **目标**：理解 BRD 内容，为 journey 拆解做准备
 
-#### 0.1 BRD 读取
+#### 0.1 最新批准 BRD baseline 确认与读取
 
-使用 Read 工具读取用户提供的 BRD 文件，提取关键信息：
+先确认当前输入是否为**最新批准 baseline**。参考同仓成熟 writer 的做法，不要默认用户给到的文件就是有效基线：
+- 若存在多份 BRD、多个版本、或缺少批准证据，先用 AskUserQuestion 让用户确认哪一份是当前有效 baseline
+- 若无法形成可靠选项，允许用户直接用 free-text 指定路径/版本/批准状态
+- 若当前只有 draft BRD，可继续访谈，但 `artifact.status` 不能直接设为 `approved`
+
+确认 baseline 后，再读取 BRD 并提取关键信息：
 
 | 提取项 | 说明 |
 |--------|------|
@@ -89,6 +96,7 @@ description: 'User journey interview, use case interview, 用户旅程访谈。U
 ```
 我已阅读 BRD，让我确认一下理解是否正确：
 
+**BRD baseline**：[路径 / 版本 / 批准状态]
 **业务目标**：[从 BRD 提取]
 **目标用户**：[从 BRD 提取]
 **范围**：[从 BRD 提取]
@@ -104,16 +112,7 @@ description: 'User journey interview, use case interview, 用户旅程访谈。U
 
 #### 1.1 Journey 清单识别
 
-基于 BRD 内容，列出潜在的用户旅程：
-
-```
-根据 BRD，我识别出以下可能的用户旅程：
-
-1. [Journey 1 名称] - [一句话描述]
-2. [Journey 2 名称] - [一句话描述]
-3. [Journey 3 名称] - [一句话描述]
-...
-```
+基于 BRD 内容列出潜在 Journey 清单，并为每个 Journey 补一句用户目标描述。
 
 #### 1.2 范围确认（多选）
 
@@ -160,23 +159,23 @@ options:
 
 **重要**：一个 journey 完成确认后，再进入下一个。不要批量处理。
 
+**工作模式**：默认 `开放发现 → 结构化确认`。只有当 BRD 和已确认上下文足以支持高质量选项时，才使用 AskUserQuestion 给候选项；否则先让用户用 1-3 句描述，再把描述整理成选项确认。
+
 #### 2.1 Journey 基本信息
 
-```
-让我们来细化 [Journey 名称]。
-
-首先确认基本信息：
-- **谁**：执行这个操作的是哪类用户？
-- **做什么**：用户想要完成什么目标？
-- **为什么**：用户为什么需要这个功能？
-- **入口条件/来源**：用户从哪里进入这个旅程？
-- **结束状态**：流程完成后用户得到什么？
-- **主要出口/跳转点**：会离开到哪里（如有）？
-```
+如果 BRD 还不能明确回答“谁 / 做什么 / 为什么 / 从哪里来 / 到哪里结束”，先让用户用 free-text 描述当前 Journey；再把结果收敛为以下字段并确认：
+- **谁**：执行这个操作的是哪类用户
+- **做什么**：用户想要完成什么目标
+- **为什么**：用户为什么需要这个功能
+- **入口条件/来源**：用户从哪里进入这个旅程
+- **结束状态**：流程完成后用户得到什么
+- **主要出口/跳转点**：会离开到哪里（如有）
 
 #### 2.2 步骤节点（Happy Path 作为默认路径）
 
-使用 AskUserQuestion 逐步确认步骤节点：
+如果 Happy Path 还不清楚，先让用户用 free-text 讲出 2-5 个关键步骤，再整理为 `S1/S2/...` 并逐步确认。
+
+当证据足够时，使用 AskUserQuestion 逐步确认步骤节点：
 
 ```
 question: "[Journey] 的主流程第一步是什么？"
@@ -248,57 +247,51 @@ options:
 
 #### 2.5 边界情况（Edge Cases）
 
+必须读取 `references/edge-case-framework.md`。不要只记录“有哪些边界”，必须把每个已选 edge case 展开到**步骤级矩阵**。
+
+先按类别筛查；每轮只放 2-4 类，优先选择与当前 Journey 强相关的类别：
+- 数据可用性 / 数据形态：空数据、极长文本、大数据量、特殊字符
+- 重复 / 高频操作：连续点击、重复提交、重复支付
+- 中断与恢复：刷新、返回、会话过期、离开后回来
+- 权限 / 资格 / 配额：无权限、资格失效、次数用尽
+- 状态冲突 / 数据已变化：被他人修改、库存变化、价格变化
+- 部分成功 / 超时 / 重试：部分完成、第三方超时、需重试
+- 环境限制：弱网、离线、设备能力限制
+
 ```
-question: "这个流程有哪些边界情况需要考虑？"
-header: "边界情况"
+question: "[Journey] 还需要覆盖哪类边界情况？"
+header: "Edge Case 类别"
 multiSelect: true
 options:
-  - label: "[边界 1：如空数据]"
-    description: "[描述]"
-  - label: "[边界 2：如大数据量]"
-    description: "[描述]"
-  - label: "[边界 3：如并发操作]"
-    description: "[描述]"
-  - label: "暂不考虑边界情况"
-    description: "MVP 阶段先不处理"
+  - label: "数据可用性 / 数据形态"
+    description: "空数据、极长文本、大数据量、特殊字符"
+  - label: "重复 / 高频操作"
+    description: "连续点击、重复提交、重复支付"
+  - label: "中断与恢复"
+    description: "刷新、返回、会话过期、离开后回来"
+  - label: "状态冲突 / 数据已变化"
+    description: "被他人修改、库存变化、价格变化"
 ```
+
+对于每个已选 edge case，至少确认以下字段：
+- `Edge Case ID`：`EC-001` / `EC-002` ...
+- `类别`
+- `适用 Step ID`：一个或多个 `Sx`
+- `触发条件`
+- `用户看到什么`
+- `处理结果/流向`：停留当前步 / 回退 / 重试 / 跳转 / 结束
+- `数据保留与恢复方式`
+- `优先级`：`MVP` / `后续`
+- `状态`：`已确认` / `待定`
+
+**门禁规则**：
+- `P0` Journey 禁止用“暂不考虑边界情况”整章跳过；若判断“无额外 edge case”，必须说明原因
+- 任何 `MVP` edge case 都必须绑定到至少一个 `Sx`，且写清用户可见结果与恢复方式
+- 标记为 `后续` 或 `待定` 的 edge case，必须写入「待定项」并说明风险，不得伪装为已确认
 
 #### 2.6 Journey 确认
 
-展示当前 journey 的完整摘要：
-
-```markdown
-## [Journey 名称] - 确认摘要
-
-**优先级**：P0/P1/P2
-**用户**：[谁]
-**目标**：[做什么]
-**入口条件/来源**：[条件/来源]
-**结束状态**：[状态]
-**主要出口/跳转点**：[如有]
-
-### 步骤节点（默认路径）
-1. [S1] [Step 1]
-2. [S2] [Step 2]
-3. [S3] [Step 3]
-...
-
-### 跳转/分支
-| From | To | 触发条件 |
-|------|----|----------|
-| [S2] | [Journey B / S1] | [条件] |
-
-### 异常处理
-| 异常情况 | 处理方式 |
-|----------|----------|
-| [异常 1] | [处理] |
-
-### 边界情况
-- [边界 1]：[处理]
-
-### 待定项
-- [如有]
-```
+展示当前 Journey 的摘要，至少覆盖：基本信息、默认路径步骤、跳转/分支、异常处理、步骤级 Edge Case Matrix、待定项。
 
 使用 AskUserQuestion 确认：
 
@@ -330,16 +323,16 @@ options:
 这些步骤的行为应该保持一致。请确认。
 ```
 
-#### 3.2 共享错误处理
+#### 3.2 共享异常/边界处理
 
 ```
-以下异常处理策略建议在所有 journey 中保持一致：
+以下异常处理与 edge case 策略建议在所有 journey 中保持一致：
 
-| 异常类型 | 统一处理方式 |
-|----------|--------------|
-| 网络错误 | [处理] |
-| 权限不足 | [处理] |
-| 数据不存在 | [处理] |
+| 类型 | 统一处理方式 | 数据保留/恢复 |
+|------|--------------|----------------|
+| 网络错误 | [处理] | [恢复] |
+| 权限不足 | [处理] | [恢复] |
+| 重复提交 / 空态 / 会话过期 | [处理] | [恢复] |
 
 请确认或调整。
 ```
@@ -352,19 +345,47 @@ options:
 
 确认无悬挂节点/跳转，所有跳转目标均存在且入口明确；若存在跨 Journey 循环，标注其触发条件与退出路径。
 
+#### 3.5 Checkpoint Gate 判定
+
+必须读取 `references/checkpoint-gates.md`，并逐项判断当前 `USER_JOURNEY` 工件能否进入 `draft / in_review / approved`：
+- 最新批准 BRD baseline 是否已确认
+- BRD in-scope 项是否都映射到至少一个 Journey
+- `P0` Journey 是否全部确认
+- 是否存在悬挂跳转 / 未定义入口 / 无法解释的循环
+- 是否仍有 `MVP` edge case 待定
+- `trace-lint` 是否通过
+
+若 blocking issue 未清空，不得推荐“直接进入 prd-writer 并视为锁定基线”。
+
 ---
 
 ### Phase 4: 输出与衔接
 
 #### 4.1 生成 User Journey 文档
 
-使用 `assets/journey-output-template.md` 模板生成文档（包含 Journey Graph 与跳转表）。
+使用 `assets/journey-output-template.md` 模板生成文档。文档必须包含：
+- `TRACEABILITY-METADATA` block，且符合 `../../references/traceability-schema/journey-profile-v1.example.yaml`
+- 稳定 `artifact.id=JOURNEY-*`
+- 稳定 `FLOW-*` Journey ID、`source_documents`、`relations`
+- checkpoint decision、review record、Journey Graph、跳转表、步骤级 Edge Case Matrix
 
 **输出位置**：与用户确认，默认为 `{项目路径}/docs/user-journeys.md`
 
 **文件命名**：`User-Journeys-{项目名}-{YYYYMMDD}.md`
 
-#### 4.2 推荐衔接
+#### 4.2 trace-lint 与 checkpoint 状态
+
+生成文档后必须执行：
+
+```bash
+python3 plugins/testany-eng/scripts/trace_lint.py --format json --profile journey-profile-v1 [Journey路径]
+```
+
+要求：
+- `trace-lint` 通过后，才可把工件状态提升到 `in_review` 或 `approved`
+- 若存在 blocking issue，必须在文档的 `Blocking Issues / Checkpoint Decision` 中显式列出
+
+#### 4.3 推荐衔接
 
 ```
 用户旅程文档已生成：[路径]
@@ -383,52 +404,16 @@ options:
 
 ### 流程图必须使用 Mermaid
 
-**禁止使用 ASCII 线框图**（如 `┌───┐`、`│ │`、`└───┘`），在多数 Markdown 渲染器中显示错乱。
-
-所有流程图必须使用 Mermaid：
-
-```mermaid
-flowchart LR
-    S0[开始] --> S1[Step 1]
-    S1 --> S2[Step 2]
-    S2 --> S3[Step 3]
-    S3 --> E[结束]
-```
-
-跨 Journey 跳转图示例：
-
-```mermaid
-flowchart TD
-    subgraph Journey_A[Journey A: 下单]
-        A1[选商品] --> A2{已登录?}
-        A2 -->|是| A3[确认订单]
-        A2 -->|否| B1
-        A3 --> A4[支付]
-    end
-    subgraph Journey_B[Journey B: 登录]
-        B1[输入账号] --> B2[验证]
-        B2 --> B3[登录成功]
-    end
-    B3 --> A3
-```
+**禁止使用 ASCII 线框图**（如 `┌───┐`、`│ │`、`└───┘`）。
+Journey 内流程图和跨 Journey 跳转图都必须使用 Mermaid；格式与示例见 `assets/journey-output-template.md`。
 
 ### User Journey 文档结构
 
-参考 `assets/journey-output-template.md` 模板（必须包含 Journey Graph 与跳转关系表）。
+参考 `assets/journey-output-template.md` 模板；必须包含 `journey-profile-v1` metadata、Journey Graph、跳转关系表、步骤级 Edge Case Matrix、Checkpoint Decision。
 
 ### BRD→Journey→PRD 追溯
 
-在文档末尾包含映射表：
-
-```markdown
-## 追溯映射
-
-| BRD 需求项 | 对应 Journey | 状态 |
-|------------|--------------|------|
-| [BRD-001] | Journey 1, Journey 2 | 已覆盖 |
-| [BRD-002] | Journey 3 | 已覆盖 |
-| [BRD-003] | - | 待后续迭代 |
-```
+在文档末尾保留 `BRD → Journey` 与 `Journey → PRD` 映射表，格式以模板为准。
 
 ---
 
@@ -437,17 +422,18 @@ flowchart TD
 - **选项数量**：2-4 个
 - **header**：简短标签（如"优先级"、"异常处理"）
 - **multiSelect**：选项不互斥时用 `true`
+- **free-text fallback**：当 BRD 与上下文不足以生成高质量选项时，先让用户直接描述，再回到结构化确认
 
-### 常见多选场景
-- Journey 范围选择
-- 异常情况识别
-- 边界情况识别
+## 使用示例
 
-### 常见单选场景
-- 优先级（P0/P1/P2 互斥）
-- 步骤流向（继续/回退/跨 Journey）
-- 异常处理方式（通常选一种策略）
-- Journey 确认（确认 vs 修改）
+### 示例 1：baseline 确认
+
+- 用户提供多个 BRD 版本时，先确认哪一份是“最新批准版”；若无批准证据，只能继续产出 `draft` 或 `in_review`
+
+### 示例 2：先开放发现，再结构化确认
+
+- 先请用户用 1-3 句描述 Journey 的真实目标和 2-5 个关键步骤
+- 再把这些内容整理成 `谁 / 目标 / 入口 / 结束状态 / S1..Sn / 跳转关系` 让用户确认
 
 ---
 
@@ -473,21 +459,7 @@ flowchart TD
 
 ---
 
-## 访谈技巧
+## 访谈提醒
 
-### 1. 场景化引导
-- "想象一下，用户打开这个页面，他第一个想做的事情是什么？"
-- "如果用户在这一步遇到问题，他会怎么反应？"
-
-### 2. 追问边界
-- "如果数据是空的，用户会看到什么？"
-- "如果用户连续点击两次，会发生什么？"
-- "如果用户中途离开，回来后会怎样？"
-
-### 3. 逼出优先级
-- "如果只能保留一个功能，你会选哪个？"
-- "这个功能如果 MVP 不做，会影响产品发布吗？"
-
-### 4. 控制节奏
-- 每个 journey 深挖完毕后暂停，让用户消化
-- 复杂 journey 可以分多轮访谈
+- 边界分类、必问触发器与步骤级矩阵示例见 `references/edge-case-framework.md`
+- 复杂 Journey 可以分多轮访谈，但在进入确认前必须补齐 `MVP` edge case 的用户可见结果与恢复方式

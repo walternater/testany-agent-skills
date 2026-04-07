@@ -232,12 +232,14 @@ flowchart TD
 **用途**：在 BRD 和 PRD 之间建立对齐检查点，确保用户旅程符合预期
 
 **特点**：
-- 逐条 Journey 确认（主流程 → 替代路径 → 异常 → 边界）
+- 先确认最新批准 BRD baseline，再逐条 Journey 确认
+- 两段式访谈：开放发现 → 结构化确认
+- 逐条 Journey 确认（主流程 → 跳转/分支 → 异常 → 步骤级 edge case matrix）
 - 每个 Journey 确认后再进入下一个
-- 输出可直接喂给 prd-writer
+- 输出带 `TRACEABILITY-METADATA` 的 USER_JOURNEY 基线，可直接喂给 prd-writer
 
 **输入**：BRD 文件路径
-**输出**：User Journey 文档（已对齐）
+**输出**：User Journey 文档（含 checkpoint 状态与 traceability metadata）
 
 **示例**：
 ```

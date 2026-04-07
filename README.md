@@ -85,7 +85,7 @@ testany-agent-skills/
 |------|------|
 | `/testany-eng:guide` | 流程导航助手，扫描现有文档与准出状态，判断当前所处阶段并推荐下一步最合适的 skill |
 | `/testany-eng:brd-interviewer` | 业务需求访谈专家，通过选择题引导 stakeholder 输出结构化 BRD |
-| `/testany-eng:uc-interviewer` | 用户旅程访谈专家，在 BRD 和 PRD 之间建立对齐检查点 |
+| `/testany-eng:uc-interviewer` | 用户旅程访谈专家，在 BRD 和 PRD 之间建立对齐检查点，确认最新 BRD baseline，并产出带 metadata 的 USER_JOURNEY 基线 |
 | `/testany-eng:prd-writer` | PRD 写作技能，支持多种类型：新功能、第三方集成、重构、优化 |
 | `/testany-eng:prd-reviewer` | PRD 审查专家，作为「准出门禁」从多角色视角全面审查 |
 | `/testany-eng:prototype-designer` | 交互原型设计助手，在前端仓库中基于 PRD + User Journey 生成可交互原型 |

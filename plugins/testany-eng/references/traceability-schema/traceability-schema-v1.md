@@ -4,11 +4,11 @@
 
 这套 schema 用于给 `testany-eng` 全链路文档提供统一、可脚本处理的追溯元数据契约，支持：
 
-- 为 `PRD / HLD / LLD / Test Strategy / Test Spec` 提供统一的机器可读元数据
+- 为 `USER_JOURNEY / PRD / HLD / LLD / Test Strategy / Test Spec` 提供统一的机器可读元数据
 - 自动生成和校验 RTM（Requirements Traceability Matrix）
 - 自动计算测试设计覆盖率
 - 检查 ID 稳定性、引用合法性、漏项、孤儿项、未批准豁免项
-- 允许分阶段接入：先接 `PRD`，再逐步接 `Test Strategy / Test Spec / HLD / LLD`
+- 允许分阶段接入：先接 `USER_JOURNEY / PRD`，再逐步接 `Test Strategy / Test Spec / HLD / LLD`
 
 ## 2. 非目标
 
@@ -446,7 +446,23 @@ PRD 阶段的基础 profile。
 - `risks / must_not_regress / external_behaviors` 三者合计至少应有 1 条建模对象
 - 推荐使用 `relations[].type=derived_from` / `refines` 将这些对象追溯到 `REQ-*` 或上游文档 ID
 
-### 10.4 `test-spec-profile-v1`
+### 10.4 `journey-profile-v1`
+
+用于承载 `uc-interviewer` 产出的正式 User Journey baseline。
+
+约束：
+
+- `artifact.type` 必须为 `USER_JOURNEY`
+- `artifact.id` 必须使用 `JOURNEY-` 前缀
+- `artifact.source_documents` 至少包含 1 个 `BRD-*` baseline ID
+- 以下桶必须存在，即使为空数组：`requirements`、`risks`、`must_not_regress`、`external_behaviors`、`decisions`、`flows`、`test_cases`
+- `entities.flows` 必须存在且至少 1 条
+- 每条 `FLOW-*` 必须包含：`id`、`title`、`statement`、`status`、`scope`、`kind`、`priority`
+- `flows[].kind` 必须为 `user_journey`
+- 每个 `FLOW-*` 至少应有 1 条 outgoing relation（`derived_from` / `refines` / `depends_on`），指向 `BRD-*`、`REQ-*`、其他 `FLOW-*` 或上游 `JOURNEY-*`
+- 示例见 `journey-profile-v1.example.yaml`
+
+### 10.5 `test-spec-profile-v1`
 
 用于承载详细测试规格与测试用例包。
 
@@ -485,7 +501,7 @@ PRD 阶段的基础 profile。
   - `MR-*`
   - `BEH-*`
 
-### 10.5 `hld-profile-v1`
+### 10.6 `hld-profile-v1`
 
 用于承载高层技术设计的架构决策与关键流程。HLD 是连接需求和实现的关键桥梁，其 profile 确保架构决策可追溯到上游需求。
 
@@ -499,7 +515,7 @@ PRD 阶段的基础 profile。
 - `decisions` 与 `flows` 合计至少应有 **1 条**建模对象
 - 每个 `DEC-*` / `FLOW-*` 至少应有 1 条 outgoing relation（`refines` 或 `derived_from`），指向 `REQ-*` 或上游 artifact ID
 
-### 10.6 `lld-profile-v1`
+### 10.7 `lld-profile-v1`
 
 用于承载低层设计的模块级决策与模块交互流程。LLD 更接近实现层，追溯目标包括 HLD 层的 `DEC-*` / `FLOW-*`。
 
@@ -587,6 +603,7 @@ waivers: []
 
 ### 阶段 1
 
+- `uc-interviewer` 产出 `journey-profile-v1`
 - `prd-writer` 产出 `prd-profile-v1`
 - `prd-reviewer` 校验 `REQ-*` 是否完整、唯一、稳定
 

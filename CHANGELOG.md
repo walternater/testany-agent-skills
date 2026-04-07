@@ -35,6 +35,20 @@
 
 ### 变更
 
+- **uc-interviewer edge case 收敛**：
+  - 新增 `plugins/testany-eng/skills/uc-interviewer/references/edge-case-framework.md`，统一 edge case 分类、必问触发器、defer 规则与步骤级矩阵输出契约
+  - `uc-interviewer` 改为强制输出步骤级 `Edge Case Matrix`，记录 `Step ID / trigger / user-visible behavior / recovery`
+  - `journey-output-template*.md` 同步升级为步骤级 edge case 模板
+  - `prd-writer` / `prototype-designer` / `uc-interviewer` command / README 同步改为消费新的 edge case 结构
+
+- **uc-interviewer checkpoint / traceability 收敛**：
+  - `uc-interviewer` 改为 `开放发现 → 结构化确认` 的两段式访谈，证据不足时允许 free-text fallback
+  - 新增 `plugins/testany-eng/references/traceability-schema/journey-profile-v1.example.yaml`，补齐 `USER_JOURNEY` 的机器可读契约示例
+  - 新增 `plugins/testany-eng/skills/uc-interviewer/references/checkpoint-gates.md`，定义 `draft / in_review / approved` 与 blocking 条件
+  - `journey-output-template*.md` 升级为带 `TRACEABILITY-METADATA`、`JOURNEY-* / FLOW-*`、checkpoint decision、review record 的正式基线模板
+  - `trace_lint.py` 与测试新增 `journey-profile-v1` 校验；`trace-lint` 契约文档补充 `TRACE608`
+  - `prd-writer`、guide artifact detection、agent prompt、README/command 同步改为识别最新 BRD baseline、Journey artifact status 与统一跳转模型
+
 - **testany-eng 发现层更新**：
   - plugin README 的快速选择区新增 `/guide` 入口，便于存量项目和新用户先做流程定位
   - 仓库 README 新增 `/testany-eng:guide` 的命令入口、使用示例与 skill 描述
@@ -83,6 +97,11 @@
   - `commands`、plugin README、根 README、marketplace、`plugin.json` 同步更新为新的 automation model 和 skill 边界
 
 ### 移除
+
+- **`testany-mrkt` 移除内部短视频脚本能力**：
+  - 删除 `video-script-writer` skill 与 `/testany-mrkt:video-script-writer` 命令入口
+  - `video-script-writer` 已迁移至私有仓 `testany-internal-agent-skills`
+  - `plugins/testany-mrkt/.claude-plugin/plugin.json` 描述同步收敛为仅保留自媒体文章创作
 
 - **删除已废弃的 `prd-studio`**：
   - `testany-eng` 的命令列表、流程图、决策树和 plugin 描述不再展示 `prd-studio`

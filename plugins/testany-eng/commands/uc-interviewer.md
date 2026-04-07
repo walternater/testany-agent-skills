@@ -17,23 +17,24 @@ $ARGUMENTS
 
 BRD 定义了"做什么"，但用户旅程有很多"模糊地带"：
 - 主流程的具体步骤
-- 替代路径的选择
+- 跳转/分支的选择
 - 异常情况的处理方式
-- 边界情况的优先级
+- Edge case 的触发、用户可见结果与恢复方式
 
 这些决策如果在 PRD 阶段才暴露，返工成本高。
 
 ## 访谈内容
 
-1. **Journey 范围** - 确认要细化哪些用户旅程
-2. **主流程** - 逐步确认 Happy Path
-3. **替代路径** - 其他完成方式
-4. **异常处理** - 出错时怎么办
-5. **边界情况** - 极端场景
+1. **BRD baseline** - 先确认哪一份是最新批准版 BRD
+2. **Journey 范围** - 确认要细化哪些用户旅程
+3. **主流程** - 先开放发现，再逐步确认 Happy Path
+4. **跳转/分支** - 其他完成方式与跨 Journey 流转
+5. **异常处理** - 出错时怎么办
+6. **步骤级 Edge Case** - 逐项确认触发条件、用户可见结果、恢复方式
 
 ## 输出物
 
-结构化的 User Journey 文档，可直接喂给 prd-writer。
+结构化的 User Journey 文档，包含 `TRACEABILITY-METADATA`、`JOURNEY-* / FLOW-*`、步骤级 Edge Case Matrix 和 checkpoint 状态，可直接喂给 prd-writer。
 
 ## 工作流程
 

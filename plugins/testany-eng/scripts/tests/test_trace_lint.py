@@ -303,6 +303,104 @@ waivers: []
 """
 
 
+VALID_JOURNEY_METADATA = """
+schema:
+  name: testany-traceability
+  version: "1.0.0"
+  profile: journey-profile-v1
+artifact:
+  id: JOURNEY-CHECKOUT-001
+  type: USER_JOURNEY
+  title: Checkout User Journeys
+  status: approved
+  created_at: 2026-03-08
+  updated_at: 2026-03-08
+  source_documents:
+    - BRD-CHECKOUT-001
+entities:
+  requirements: []
+  risks: []
+  must_not_regress: []
+  external_behaviors: []
+  decisions: []
+  flows:
+    - id: FLOW-CHECKOUT-001
+      title: Apply coupon before payment
+      statement: 用户在结算页输入优惠券并看到折后金额。
+      status: approved
+      scope: in
+      kind: user_journey
+      priority: P0
+      source_refs:
+        - artifact_id: BRD-CHECKOUT-001
+          section: 3.1
+    - id: FLOW-CHECKOUT-002
+      title: Login and return to checkout
+      statement: 未登录用户在登录完成后返回结算页继续流程。
+      status: approved
+      scope: in
+      kind: user_journey
+      priority: P1
+      source_refs:
+        - artifact_id: BRD-CHECKOUT-001
+          section: 3.2
+  test_cases: []
+relations:
+  - id: REL-JOURNEY-001
+    type: derived_from
+    from: FLOW-CHECKOUT-001
+    to: BRD-CHECKOUT-001
+    status: active
+  - id: REL-JOURNEY-002
+    type: derived_from
+    from: FLOW-CHECKOUT-002
+    to: BRD-CHECKOUT-001
+    status: active
+  - id: REL-JOURNEY-003
+    type: depends_on
+    from: FLOW-CHECKOUT-001
+    to: FLOW-CHECKOUT-002
+    status: active
+waivers: []
+"""
+
+
+INVALID_JOURNEY_METADATA = """
+schema:
+  name: testany-traceability
+  version: "1.0.0"
+  profile: journey-profile-v1
+artifact:
+  id: JOURNEY-CHECKOUT-001
+  type: USER_JOURNEY
+  title: Checkout User Journeys
+  status: draft
+  created_at: 2026-03-08
+  updated_at: 2026-03-08
+  source_documents:
+    - BRD-CHECKOUT-001
+entities:
+  requirements: []
+  risks: []
+  must_not_regress: []
+  external_behaviors: []
+  decisions: []
+  flows:
+    - id: FLOW-CHECKOUT-001
+      title: Missing relation journey
+      statement: 缺少 relation 的 journey。
+      status: proposed
+      scope: in
+      kind: user_journey
+      source_refs:
+        - artifact_id: BRD-CHECKOUT-001
+          section: 3.1
+  test_cases: []
+relations: []
+waivers: []
+"""
+
+
 class TraceLintCliTests(unittest.TestCase):
     maxDiff = None
 
@@ -413,6 +511,26 @@ class TraceLintCliTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("TRACE604", result.stdout)
+
+    def test_valid_journey_profile_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "journey.yaml"
+            path.write_text(textwrap.dedent(VALID_JOURNEY_METADATA).strip() + "\n", encoding="utf-8")
+
+            result = self.run_cli(str(path))
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("TRACE-LINT RESULT: PASS", result.stdout)
+
+    def test_journey_profile_requires_priority_and_relations(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "journey-invalid.yaml"
+            path.write_text(textwrap.dedent(INVALID_JOURNEY_METADATA).strip() + "\n", encoding="utf-8")
+
+            result = self.run_cli(str(path))
+
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("TRACE608", result.stdout)
 
 
     # ── HLD profile tests ──

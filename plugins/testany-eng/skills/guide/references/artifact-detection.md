@@ -98,6 +98,8 @@ Guide 不需要做到“100% 自动理解所有文档”，但必须做到：
 
 强信号：
 
+- `TRACEABILITY-METADATA` 中 `artifact.type: USER_JOURNEY`
+- `schema.profile: journey-profile-v1`
 - 标题含 `Journey` / `User Journey`
 - 含步骤流转、异常路径、边界情况、Mermaid 流程图
 
@@ -108,6 +110,7 @@ Guide 不需要做到“100% 自动理解所有文档”，但必须做到：
 注意：
 
 - 不要把单个页面流程说明误判成正式 User Journey 基线
+- 若 metadata 存在，状态优先取 `artifact.status`
 
 ### 3. PRD
 

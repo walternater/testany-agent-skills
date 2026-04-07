@@ -59,6 +59,7 @@ ALLOWED_TEST_CASE_LAYER = {"system_integration", "e2e", "regression", "compatibi
 ALLOWED_AUTOMATION = {"must", "should", "manual_ok"}
 ALLOWED_FLOW_KIND = {"user_journey", "system_flow", "state_transition"}
 ALLOWED_FLOW_KIND_LLD = ALLOWED_FLOW_KIND | {"module_interaction"}
+JOURNEY_ALLOWED_RELATION_TARGET_PREFIXES = ("BRD-", "REQ-", "FLOW-", "JOURNEY-")
 HLD_ALLOWED_RELATION_TARGET_PREFIXES = ("REQ-", "BRD-", "JOURNEY-", "PRD-", "API-")
 LLD_ALLOWED_RELATION_TARGET_PREFIXES = ("DEC-", "FLOW-", "REQ-", "BRD-", "JOURNEY-", "PRD-", "API-", "HLD-")
 REQUIRED_TOP_LEVEL_KEYS = ("schema", "artifact", "entities", "relations", "waivers")
@@ -800,6 +801,124 @@ def validate_test_spec_profile(
             )
 
 
+def validate_journey_profile(
+    ctx: LintContext,
+    artifact_id: str | None,
+    artifact_type: str | None,
+    source_documents: set[str],
+    entities: dict[str, Any] | None,
+    relations: Any,
+) -> None:
+    if artifact_type != "USER_JOURNEY":
+        ctx.add_issue(
+            "error",
+            "TRACE608",
+            "artifact.type",
+            f"`journey-profile-v1` 要求 artifact.type = `USER_JOURNEY`，当前为 `{artifact_type}`。",
+            "将 artifact.type 调整为 `USER_JOURNEY`。",
+        )
+    if not isinstance(artifact_id, str) or not artifact_id.startswith("JOURNEY-"):
+        ctx.add_issue(
+            "error",
+            "TRACE608",
+            "artifact.id",
+            f"`journey-profile-v1` 要求 artifact.id 使用 `JOURNEY-` 前缀，当前为 `{artifact_id}`。",
+            "将 artifact.id 调整为如 `JOURNEY-CHECKOUT-001` 的稳定文档 ID。",
+        )
+    if not source_documents:
+        ctx.add_issue(
+            "error",
+            "TRACE608",
+            "artifact.source_documents",
+            "`journey-profile-v1` 要求至少声明 1 个上游 source document。",
+            "为 artifact.source_documents 补充当前使用的 BRD artifact ID。",
+        )
+    elif not any(doc.startswith("BRD-") for doc in source_documents):
+        ctx.add_issue(
+            "error",
+            "TRACE608",
+            "artifact.source_documents",
+            "`journey-profile-v1` 要求 artifact.source_documents 至少包含 1 个 `BRD-*` baseline ID。",
+            "补充当前 BRD 基线的稳定 artifact ID，例如 `BRD-CHECKOUT-001`。",
+        )
+
+    entities = validate_profile_buckets(ctx, entities, "TRACE608", "journey-profile-v1")
+    if not entities:
+        return
+
+    flows = entities.get("flows")
+    if not isinstance(flows, list) or len(flows) == 0:
+        ctx.add_issue(
+            "error",
+            "TRACE608",
+            "entities.flows",
+            "`journey-profile-v1` 要求至少声明 1 条 `FLOW-*`，用于建模 Journey 基线。",
+            "在 entities.flows 中补充至少 1 条 `kind=user_journey` 的 flow。",
+        )
+        return
+
+    outgoing_relations: dict[str, list[dict[str, Any]]] = {}
+    if isinstance(relations, list):
+        for relation in relations:
+            if isinstance(relation, dict) and isinstance(relation.get("from"), str):
+                outgoing_relations.setdefault(relation["from"], []).append(relation)
+
+    for index, flow in enumerate(flows):
+        flow_path = f"entities.flows[{index}]"
+        flow_id = flow.get("id", flow_path) if isinstance(flow, dict) else flow_path
+        if not isinstance(flow, dict):
+            continue
+        for field in ("id", "title", "statement", "status", "scope", "kind", "priority"):
+            if field not in flow:
+                add_missing_field_issue(ctx, flow_path, "TRACE608", field, f"Journey flow {flow_id}")
+        if flow.get("kind") is not None and flow.get("kind") != "user_journey":
+            ctx.add_issue(
+                "error",
+                "TRACE608",
+                f"{flow_path}.kind",
+                f"Journey flow {flow_id} 的 kind 必须为 `user_journey`，当前为 `{flow.get('kind')}`。",
+                "将 kind 调整为 `user_journey`。",
+            )
+        if flow.get("priority") is not None and flow.get("priority") not in ALLOWED_PRIORITY:
+            ctx.add_issue(
+                "error",
+                "TRACE608",
+                f"{flow_path}.priority",
+                f"Journey flow {flow_id} 的 priority 非法：`{flow.get('priority')}`。",
+                "将 priority 设置为 P0/P1/P2/P3 之一。",
+            )
+
+        flow_relations = outgoing_relations.get(flow.get("id"), [])
+        valid_relations = [
+            relation for relation in flow_relations
+            if relation.get("type") in {"derived_from", "refines", "depends_on"}
+        ]
+        if not valid_relations:
+            ctx.add_issue(
+                "error",
+                "TRACE608",
+                flow_path,
+                f"Journey flow {flow_id} 缺少 outgoing derived_from/refines/depends_on relation。",
+                "至少为该 Journey flow 建立 1 条 relation，指向 BRD baseline、上游 REQ-* 或相关 FLOW-*。",
+            )
+            continue
+        for relation in valid_relations:
+            target = relation.get("to", "")
+            if isinstance(target, str) and target in source_documents:
+                continue
+            if isinstance(target, str) and target.startswith("FLOW-"):
+                continue
+            if isinstance(target, str) and any(target.startswith(prefix) for prefix in JOURNEY_ALLOWED_RELATION_TARGET_PREFIXES):
+                continue
+            ctx.add_issue(
+                "error",
+                "TRACE608",
+                flow_path,
+                f"Journey flow {flow_id} 的 relation target `{target}` 不是预期的上游对象。",
+                "Journey flow 的 relation target 应指向 BRD-* / REQ-* / FLOW-* / JOURNEY-* 或 artifact.source_documents 中已声明的 baseline。",
+            )
+
+
 def validate_hld_profile(
     ctx: LintContext,
     artifact_type: str | None,
@@ -1273,6 +1392,15 @@ def lint_metadata(path: Path, metadata: dict[str, Any] | None, forced_profile: s
             artifact_type,
             entities_obj if isinstance(entities_obj, dict) else None,
             requirements,
+        )
+    elif profile == "journey-profile-v1":
+        validate_journey_profile(
+            ctx,
+            artifact_id,
+            artifact_type,
+            source_documents,
+            entities_obj if isinstance(entities_obj, dict) else None,
+            metadata.get("relations"),
         )
     elif profile == "test-strategy-profile-v1":
         validate_test_strategy_profile(

@@ -231,6 +231,35 @@ input:
   - `P3`
 - `acceptance_criteria` 必须是非空字符串数组
 
+如果文档声明 `journey-profile-v1`，必须额外检查：
+
+- `artifact.type` 必须等于 `USER_JOURNEY`
+- `artifact.id` 必须使用 `JOURNEY-` 前缀
+- `artifact.source_documents` 至少包含 1 个 `BRD-*` baseline ID
+- 以下桶必须存在，即使为空数组：
+  - `requirements`
+  - `risks`
+  - `must_not_regress`
+  - `external_behaviors`
+  - `decisions`
+  - `flows`
+  - `test_cases`
+- `entities.flows` 必须存在且至少 1 条
+- 每条 flow 必须包含：
+  - `id`
+  - `title`
+  - `statement`
+  - `status`
+  - `scope`
+  - `kind`
+  - `priority`
+- `kind` 只允许：
+  - `user_journey`
+- 每条 `FLOW-*` 至少应有 1 条 outgoing relation：
+  - `derived_from`
+  - `refines`
+  - 或 `depends_on`
+
 ## 7. 问题分级
 
 `trace-lint` v1 使用三档严重度：
@@ -270,6 +299,7 @@ input:
 | `TRACE502` | warning | waiver 未批准或已过期 |
 | `TRACE601` | error | profile 不匹配 |
 | `TRACE602` | error | `prd-profile-v1` requirement 缺字段 |
+| `TRACE608` | error | `journey-profile-v1` 缺字段、缺 baseline、缺 flow relation 或 flow 结构非法 |
 
 ## 9. 输出格式
 
