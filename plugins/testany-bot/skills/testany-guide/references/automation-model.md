@@ -45,9 +45,12 @@ approved test-spec (+ Testany Automation Handoff) / 用户需求
      - 拆解 scenario
      - 生成 platform cases
      - 产出 automation design / decomposition
-  -> testany-case
+  -> testany-case                     (手工路径：注册现成 ZIP)
      - 将 platform cases 注册到 Testany 平台
      - 返回 case keys
+  -> testany-import-git               (Git 路径：从仓库导入)
+     - 连 Git → 建 import history → sync
+     - 由 backend 生成 platform cases 并维护 file bindings
   -> testany-pipeline
      - 根据 decomposition 和 case keys 组装 pipeline
   -> testany-trigger
@@ -80,3 +83,4 @@ approved test-spec (+ Testany Automation Handoff) / 用户需求
 - `testany-pipeline` 的主路径应消费上游的 decomposition 结果，而不是主要依赖猜测 case 描述。
 - `testany-trigger` 必须同时覆盖 persistent trigger（`Plan`、`Manual Trigger`、`Gatekeeper`）和 ad-hoc run now。
 - `testany-execution` 应负责 execution 发起之后的观测与管理，而不是再次承担 trigger 职责。
+- `testany-import-git` 是 `testany-case-writing` + `testany-case` 的"从 Git 导入"分支：当 platform cases 的真源在 Git 仓库（非手工构造 ZIP）时，由它负责连接、选仓、建 import history、同步、演化 bindings 与 webhook。产出的依旧是 platform cases，下游继续走 `testany-pipeline` / `testany-trigger`。

@@ -54,3 +54,4 @@ Traditional Test Scenario
 |--------------|------|
 | `testany://schema/case` | Case 创建/更新字段定义 |
 | `testany://schema/pipeline` | Pipeline YAML 完整 schema |
+| `testany://schema/import-git` | V2 Git 导入（连接 / 浏览 / 同步 / switch / relation / webhook）全量流程与类型 |

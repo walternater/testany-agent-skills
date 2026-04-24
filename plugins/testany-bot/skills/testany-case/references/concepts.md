@@ -79,10 +79,13 @@
 | **Global** | `false` | `[]`（空数组） | 全组织可见 |
 | **Private** | `true` | `["WS1", "WS2"]` | 仅指定工作空间可见 |
 
-### 使用建议
+> ⚠️ Global / Private 的可选性受租户 `deployment_type` 约束。**`type=2` 租户不允许新建 global case，也不允许 private → global**。完整规则、错误码、获取 `deployment_type` 的方式见 [case-visibility-policy.md](../../testany-guide/references/case-visibility-policy.md)。
 
-- **Global**：共享工具类测试、组织级标准用例
-- **Private**：团队专属测试、开发中的用例、含敏感数据的测试
+### 如何选
+
+- Agent 应先调 `testany_get_tenant_config` 拿 `deployment_type`，再决定默认值
+- `deployment_type=1` → **默认 Global**（无需让用户挑 workspace）
+- `deployment_type=2` → 降级为 **Private + `workspace_keys`**（该部署形态不允许 global）
 
 ---
 
