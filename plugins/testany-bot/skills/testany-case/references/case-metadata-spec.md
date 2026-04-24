@@ -115,22 +115,46 @@ Pipeline 编排需要完成三个任务：
 
 ### environment_variables（环境变量）
 
-**用途**：定义输入/输出变量及其语义
+**用途**：定义 case 运行时可见的变量及其语义
+
+**类型（`type`）**：
+- `env`（默认）：普通环境变量、pipeline relay 的输入
+- `output`：输出变量，供 pipeline 中其他 case relay 消费
+- `secrets`：引用 workspace Credential Safe 条目；声明后脚本里直接读同名环境变量即可
 
 **必须填写 `description` 字段**，说明：
 - 变量的含义
-- 对于 `type=env`：数据来源（来自哪个 case）
+- 对于 `type=env`：数据来源（来自哪个 case / 固定值 / relay）
 - 对于 `type=output`：数据用途（供哪些 case 使用）
+- 对于 `type=secrets`：凭证用途（用于访问什么资源）
 
 **格式**：
+
+`type=env` / `type=output` — 填 `value`：
 ```json
 {
   "name": "VARIABLE_NAME",
-  "type": "env | output",
-  "value": "",
+  "type": "env",
+  "value": "-",
   "description": "变量语义说明"
 }
 ```
+
+`type=secrets` — 填 `secret_ref`（**禁止**填 `value`）：
+```json
+{
+  "name": "VARIABLE_NAME",
+  "type": "secrets",
+  "secret_ref": {
+    "workspace_key": "WKS",
+    "credential_safe_key": "WKS-CS-0001",
+    "credential_key": "credential-identifier"
+  },
+  "description": "凭证语义说明"
+}
+```
+
+> **如何解析 `credential_safe_key` / `credential_key`**：用 `testany_list_credential_safes` → `testany_list_credential_keys` 两步 MCP 工具查询，传入与 case 相同的 `runtime_uuid`；取返回项的 `key` 字段（不是 `name`）。完整流程见 [executors.md](./executors.md) 的"查询 credential_safe_key / credential_key"一节。
 
 **示例**：
 
@@ -139,7 +163,7 @@ Pipeline 编排需要完成三个任务：
 {
   "name": "AUTH_TOKEN",
   "type": "env",
-  "value": "",
+  "value": "-",
   "description": "登录认证令牌，来自 LOGIN case 的输出"
 }
 ```
@@ -149,16 +173,35 @@ Pipeline 编排需要完成三个任务：
 {
   "name": "RESOURCE_ID",
   "type": "output",
-  "value": "",
+  "value": "-",
   "description": "创建的订阅资源 ID，供 READONLY_CHECK 和 INSTRUCTION_CHECK cases 使用"
+}
+```
+
+secret 变量（type=secrets）：
+```json
+{
+  "name": "API_KEY",
+  "type": "secrets",
+  "secret_ref": {
+    "workspace_key": "WKS",
+    "credential_safe_key": "WKS-CS-0001",
+    "credential_key": "prod-api-key"
+  },
+  "description": "上游 API 的访问凭证"
 }
 ```
 
 **错误示例**：
 ```json
-❌ { "name": "TOKEN", "type": "env", "value": "" }  // 缺少 description
-❌ { "name": "X", "type": "output", "value": "", "description": "输出" }  // description 无意义
+❌ { "name": "TOKEN", "type": "env", "value": "-" }  // 缺少 description
+❌ { "name": "X", "type": "output", "value": "-", "description": "输出" }  // description 无意义
+❌ { "name": "KEY", "type": "secrets", "value": "abc" }  // secrets 禁止填 value
+❌ { "name": "KEY", "type": "secrets" }  // secrets 缺少 secret_ref
+❌ { "name": "KEY", "type": "secrets", "secret_ref": { "workspace_key": "W" } }  // secret_ref 三个字段都必填
 ```
+
+> **读时只读字段**：读回 case 时，每条 `secrets` 行附带 `status`（`valid` / `blocked` / `invalid`）和 `status_reasons[]`；写入时不要传这两个字段。非 `valid` 要向用户说明原因。
 
 ---
 
@@ -188,7 +231,7 @@ description: |
 environment_variables:
   - name: AUTH_TOKEN
     type: env
-    value: ""
+    value: "-"
     description: 登录认证令牌，来自 LOGIN case 的输出
 
   - name: GALLERY_ITEM_ID
@@ -198,7 +241,7 @@ environment_variables:
 
   - name: RESOURCE_ID
     type: output
-    value: ""
+    value: "-"
     description: 创建的订阅资源 ID，供后续 READONLY_CHECK 和 INSTRUCTION_CHECK cases 使用
 ```
 
@@ -224,13 +267,16 @@ environment_variables:
     description: 测试账号用户名
 
   - name: PASSWORD
-    type: secret
-    value: ""
-    description: 测试账号密码，从 Credential Safe 获取
+    type: secrets
+    secret_ref:
+      workspace_key: WKS
+      credential_safe_key: WKS-CS-0001
+      credential_key: test-account-password
+    description: 测试账号密码；脚本里直接读同名环境变量 PASSWORD 即可
 
   - name: AUTH_TOKEN
     type: output
-    value: ""
+    value: "-"
     description: 登录成功后的认证令牌，供所有需要登录状态的 case 使用
 ```
 
@@ -246,3 +292,4 @@ environment_variables:
 - [ ] 每个 `environment_variable` 是否都有 `description`？
 - [ ] `type=env` 的变量是否说明了数据来源？
 - [ ] `type=output` 的变量是否说明了数据用途？
+- [ ] `type=secrets` 的变量是否填了完整的 `secret_ref`（workspace_key + credential_safe_key + credential_key），并在 description 说明凭证用途？

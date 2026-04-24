@@ -152,6 +152,27 @@ argument-hint: "[操作] [描述]，如：注册这些 case packages、查看 A1
 
 它不等于 `Plan / Manual Trigger / Gatekeeper` 这类 pipeline trigger。
 
+#### `case_meta.environment_variables`
+
+case 运行时可见的变量列表，每条有一个 `type`：
+
+| type | 用途 | 填值方式 |
+|------|------|---------|
+| `env`（默认） | 普通环境变量、relay 输入 | 填 `value` |
+| `output` | 供 pipeline 中其他 case relay 消费 | 填 `value`（运行时由脚本写入） |
+| `secrets` | 引用 workspace 的 Credential Safe 条目 | 填 `secret_ref: { workspace_key, credential_safe_key, credential_key }`；**禁止**填 `value` |
+
+**关于 `type=secrets`**：
+
+- 声明后，脚本里直接用同名环境变量读取凭证值即可（例：`os.getenv("DB_PASSWORD")`），不需要额外的取值代码或 SDK
+- 如果用户没有现成的 `credential_safe_key` / `credential_key`，用 `testany_list_credential_safes` → `testany_list_credential_keys` 两步查询（`runtime_uuid` 必须与 case 一致；两个工具返回签名 curl，需 agent 代为执行）。详细流程见 [executors.md 的"查询 credential_safe_key / credential_key"](./references/executors.md)
+- 读回 case 时，每条 secrets 行附带只读字段 `status`（`valid` / `blocked` / `invalid`）和 `status_reasons[]`
+  - 非 `valid` 要向用户报告原因。常见 reason：`owner_access_not_satisfied`（owner 没访问权）、`visibility_not_satisfied`（case 可见性收窄）、`target_not_found_or_unresolvable`（safe/key 不存在）、`secret_ref_malformed`（引用字段不完整）
+- 写入时不要传 `value` / `status` / `status_reasons`；传了会被后端拒绝
+- 如果 `testany_update_case` / `testany_bulk_update_cases` / `testany_bulk_append_cases` 返回错误码 `E400002`（`case_secrets_feature_disabled`），向用户说明：**当前 workspace 的 secrets 功能可能未开启，请联系 workspace 管理员**
+
+**写入注意（整集合替换语义）**：`environment_variables` 是整数组替换。若只想新增或修改单条 secret，必须先 `testany_get_case` 读出现有条目，在内存里合并后再写回；否则其他 env / output / secrets 行会被一并清空。
+
 详细字段规则见：
 - [Case 元数据规范](./references/case-metadata-spec.md)
 - [Executor 配置详解](./references/executors.md)
@@ -161,8 +182,8 @@ argument-hint: "[操作] [描述]，如：注册这些 case packages、查看 A1
 如果用户已经准备好脚本包，调用 `testany_update_case_script` 上传。
 
 如脚本中包含以下能力，提醒用户同步补齐配置：
-- Relay 输出
-- Secure key / credential 引用
+- Relay 输出 → 在 `case_meta.environment_variables` 中声明对应的 `type=output` 行
+- 凭证 / 敏感值访问 → 在 `case_meta.environment_variables` 中声明 `type=secrets` 行 + `secret_ref`，脚本里直接读同名环境变量即可
 
 ### Phase 6: 可选 dry run
 
