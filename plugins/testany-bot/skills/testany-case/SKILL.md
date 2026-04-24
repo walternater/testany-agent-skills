@@ -102,6 +102,7 @@ argument-hint: "[操作] [描述]，如：注册这些 case packages、查看 A1
 并行获取：
 - `testany_filter_case_runtimes`
 - `testany_get_my_workspaces`
+- `testany_get_tenant_config`（拿 `deployment_type`，决定 visibility 默认值，见 [case-visibility-policy.md](../testany-guide/references/case-visibility-policy.md)）
 
 如涉及 labels，先：
 - `testany_list_labels`
@@ -115,8 +116,8 @@ argument-hint: "[操作] [描述]，如：注册这些 case packages、查看 A1
 |------|------|------|
 | `name` | 是 | platform case 名称 |
 | `runtime_uuid` | 是 | 运行环境 UUID，推荐 cloudprime |
-| `is_private` | 是 | Global / Private |
-| `workspace_keys` | 条件必填 | 私有 case 需要 |
+| `is_private` | 是 | Global / Private — **受 `deployment_type` 约束**，见 [case-visibility-policy.md](../testany-guide/references/case-visibility-policy.md) |
+| `workspace_keys` | 条件必填 | `is_private=true` 时必填；详见 policy 文档 |
 | `description` | 建议 | 说明该 platform case 的原子职责 |
 | `case_labels` | 建议 | 用于目录视图和检索 |
 | `case_meta` | 条件必填 | 运行所需配置，具体字段见 executors reference |
@@ -212,6 +213,10 @@ argument-hint: "[操作] [描述]，如：注册这些 case packages、查看 A1
 2. 确认要修改的字段
 3. `testany_update_case` 提交 metadata 更新
 4. 如需替换脚本，再 `testany_update_case_script`
+
+### Visibility 变更的特殊约束
+
+`is_private` / `workspace_keys` 的更新受 `deployment_type` 约束：restricted → global 在 `type=2` 租户下会被拒（`E400001`）。见 [case-visibility-policy.md](../testany-guide/references/case-visibility-policy.md)。`bulk_update_cases` 走同一套校验。
 
 ### 必须提醒用户检查下游 pipeline 的情况
 
