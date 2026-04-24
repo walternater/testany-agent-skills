@@ -79,7 +79,7 @@ case_keys = [case['key'] for case in cases]
 
 遍历 `case_keys`，对每个 case 执行以下子流程：
 
-#### 子流程 3.1：验证 Case 存在
+#### 子流程 3.1：验证 Case 存在 + 保护已有 secrets
 
 ```python
 case = testany_get_case(key=case_key)
@@ -87,6 +87,13 @@ if case is None or case.get('error'):
     记录错误：Case 不存在
     跳过此 case
     continue
+
+# 读取并隔离已有的 type=secrets 行
+# 这类行是用户在 case 上直接维护的凭证绑定，不从源代码派生；
+# sync 流程重建 environment_variables 时必须原样保留它们，避免静默丢失绑定。
+existing_env_vars = (case.get('case_meta') or {}).get('environment_variables') or []
+preserved_secrets = [row for row in existing_env_vars if row.get('type') == 'secrets']
+preserved_secret_names = {row['name'] for row in preserved_secrets}
 ```
 
 #### 子流程 3.2：解析源代码 URL
@@ -144,6 +151,14 @@ for section in ['path', 'query', 'header', 'body']:
         text = json.dumps(structure[section])
         matches = re.findall(env_pattern, text)
         input_params.update(matches)
+
+# 跳过与已有 secret 绑定同名的变量：
+# 这些名字已经由用户配置的 secret 提供，代码中直接读同名环境变量即可，
+# sync 不应该再派生一条 type=env 把它覆盖掉。
+input_collisions = input_params & preserved_secret_names
+if input_collisions:
+    记录警告：f"以下变量与已有 secret 绑定同名，保留 secret，跳过 source 派生：{sorted(input_collisions)}"
+    input_params -= input_collisions
 ```
 
 **入参规范：**
@@ -170,6 +185,10 @@ relay_request_fields = [
 - 类型：`output`（表示 relay 输出参数）
 - value：使用占位符值 "PLACEHOLDER"
 - description：根据字段名称自动生成
+
+**与已有 secrets 的冲突处理**：
+如果 `relay_request_fields` 中某个字段与已有 secret 绑定同名，保留 secret 绑定，跳过该字段的 output 生成，并记录警告：`output 字段 {NAME} 与已有 secret 绑定同名，跳过 output 派生`。
+（同一 case 内 environment_variables 的 `name` 必须唯一，不能既是 secrets 又是 output。）
 
 #### 子流程 3.6：读取环境变量文件并替换 PLACEHOLDER
 
@@ -268,6 +287,22 @@ ENV_HEADER_AUTH_TOKEN=abc123def456
 ...
 ```
 
+如果 `preserved_secrets` 非空，额外展示保护提示（在入参/出参列表之前）：
+
+```
+⚠️ 检测到 N 个 type=secrets 行，将原样保留（本次 sync 不会修改）：
+- DB_PASSWORD
+- API_TOKEN
+...
+```
+
+如果 `input_collisions` 或 output 冲突非空，同样展示跳过提示：
+
+```
+⚠️ 以下 source 变量与已有 secret 绑定同名，已跳过派生：
+- DB_PASSWORD (source 中作为 ENV[...] 出现，保留 secret 绑定)
+```
+
 使用 `AskUserQuestion` 确认是否执行更新：
 - 选项 1：确认更新
 - 选项 2：跳过此 case
@@ -288,11 +323,15 @@ for field in relay_request_fields:
         "description": f"Output field from response: {field}"
     })
 
+# 合并：从 source 派生的 env/output 行 + 子流程 3.1 中保留的 type=secrets 行
+# 必须带上 preserved_secrets，否则整集合替换语义会把已有 secret 绑定删除
+final_env_vars = environment_variables + preserved_secrets
+
 # 更新 case
 result = testany_update_case(
     key=case_key,
     case_meta={
-        "environment_variables": environment_variables
+        "environment_variables": final_env_vars
     }
 )
 ```
@@ -372,7 +411,13 @@ result = testany_update_case(
 
 ### 6. 环境变量更新失败
 - 检查 `testany_update_case` 的错误信息
+- 如果错误码为 `E400002`（`case_secrets_feature_disabled`），提示用户：该 workspace 的 secrets 功能可能未开启，请联系管理员确认
 - 记录错误详情，继续处理下一个 case
+
+### 7. 名称冲突（source 变量与已有 secret 绑定同名）
+- 保留 secret 绑定，跳过 source 派生的同名 env/output
+- 在预览中展示跳过列表（子流程 3.7）
+- 不算错误，不中断流程；仅在汇总报告里计入警告
 
 ---
 

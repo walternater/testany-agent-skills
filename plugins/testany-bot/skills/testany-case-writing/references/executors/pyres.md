@@ -64,18 +64,26 @@ def relay_output(data: dict):
 relay_output({"ACCESS_TOKEN": token, "USER_ID": user_id})
 ```
 
-## 凭证获取 (TSS)
+## 凭证获取
+
+在 case metadata 里把变量声明为 `type: secrets`，并填好 `secret_ref`（`workspace_key` / `credential_safe_key` / `credential_key`）；脚本里直接读同名环境变量即可：
 
 ```python
-def get_secret(key: str, safe_key: str) -> str:
-    """从 Testany Secrets Service 获取凭证"""
-    tss_url = os.getenv("TESTANY_SECRETS_SERVICE")
-    resp = requests.get(tss_url, params={"key": key, "safe_key": safe_key})
-    return resp.json()["value"]
+import os
 
-# 使用
-password = get_secret("api-password", "WKS-CS-0001")
+# 假设 metadata 中声明过：
+#   - name: PASSWORD
+#     type: secrets
+#     secret_ref:
+#       workspace_key: WKS
+#       credential_safe_key: WKS-CS-0001
+#       credential_key: test-account-password
+password = os.getenv("PASSWORD")
 ```
+
+> 不需要引入凭证获取 helper，也不需要额外 HTTP 调用。
+>
+> 如果 `credential_safe_key` / `credential_key` 未知，可在 case 注册阶段用 MCP 工具 `testany_list_credential_safes` → `testany_list_credential_keys` 查询；详细流程见 `testany-case/references/executors.md`。
 
 ## 官方文档
 

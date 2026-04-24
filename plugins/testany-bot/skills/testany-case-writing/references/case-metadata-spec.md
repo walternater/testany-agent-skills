@@ -119,17 +119,23 @@ Pipeline 编排需要完成三个任务：
 
 ### environment_variables（环境变量）
 
-**用途**：定义输入/输出变量及其语义
+**用途**：定义输入/输出变量及其语义，以及 workspace Credential Safe 凭证绑定。
 
 **必须填写 `description` 字段**，说明：
 - 变量的含义
 - 对于 `type=env`：数据来源（来自哪个 case）
 - 对于 `type=output`：数据用途（供哪些 case 使用）
+- 对于 `type=secrets`：凭证用途（用于访问什么资源）
 
 **格式**：
 
-- `type` 仅支持 `env` 与 `output`。
-- `value` 不能为空或仅空白字符；如需表达“空值”，请显式填 `-`。
+- `type` 支持 `env`、`output`、`secrets`
+- `name` 必须唯一
+- `type=env` / `type=output`：必须填 `value`，不能为空或仅空白字符；如需表达“空值”，请显式填 `-`
+- `type=secrets`：必须填 `secret_ref: { workspace_key, credential_safe_key, credential_key }`，**禁止**填 `value`
+- 读回 case 时，每条 `type=secrets` 行附带只读字段 `status`（`valid` / `blocked` / `invalid`）和 `status_reasons[]`；写入时不要传
+
+`type=env` / `type=output`：
 
 ```json
 {
@@ -139,6 +145,23 @@ Pipeline 编排需要完成三个任务：
   "description": "变量语义说明"
 }
 ```
+
+`type=secrets`：
+
+```json
+{
+  "name": "PASSWORD",
+  "type": "secrets",
+  "secret_ref": {
+    "workspace_key": "WKS",
+    "credential_safe_key": "WKS-CS-0001",
+    "credential_key": "test-account-password"
+  },
+  "description": "测试账号密码；脚本里直接读同名环境变量 PASSWORD 即可"
+}
+```
+
+> 如果 `credential_safe_key` / `credential_key` 未知，在注册阶段用 `testany_list_credential_safes` → `testany_list_credential_keys` 查询；两个工具返回签名 URL/curl，由 agent 执行后从返回项里取 `key` 字段，不要用 `name`。
 
 **示例**：
 
@@ -162,10 +185,26 @@ Pipeline 编排需要完成三个任务：
 }
 ```
 
+secret 变量（type=secrets）：
+```json
+{
+  "name": "PASSWORD",
+  "type": "secrets",
+  "secret_ref": {
+    "workspace_key": "WKS",
+    "credential_safe_key": "WKS-CS-0001",
+    "credential_key": "test-account-password"
+  },
+  "description": "测试账号密码；脚本里直接读同名环境变量 PASSWORD 即可"
+}
+```
+
 **错误示例**：
 ```json
 ❌ { "name": "TOKEN", "type": "env", "value": "-" }  // 缺少 description
-❌ { "name": "X", "type": "output", "value": "-", "description": "输出" }  // description 无意义
+❌ { "name": "KEY", "type": "secrets", "value": "abc" }  // secrets 禁止填 value
+❌ { "name": "KEY", "type": "secrets" }  // secrets 缺少 secret_ref
+❌ { "name": "KEY", "type": "secrets", "secret_ref": { "workspace_key": "WKS" } }  // secret_ref 三个字段都必填
 ```
 
 ---
@@ -232,9 +271,12 @@ environment_variables:
     description: 测试账号用户名
 
   - name: PASSWORD
-    type: env
-    value: "-"
-    description: 测试账号密码（敏感）。不要把明文写进 meta；建议通过 Secure key reference 绑定，并在代码中通过 TESTANY_SECRETS_SERVICE 获取。
+    type: secrets
+    secret_ref:
+      workspace_key: WKS
+      credential_safe_key: WKS-CS-0001  # 若未知，注册阶段用 testany_list_credential_safes 查询后取其 key
+      credential_key: test-account-password  # 若未知，注册阶段用 testany_list_credential_keys 查询后取其 key
+    description: 测试账号密码；脚本里直接读同名环境变量 PASSWORD 即可
 
   - name: AUTH_TOKEN
     type: output

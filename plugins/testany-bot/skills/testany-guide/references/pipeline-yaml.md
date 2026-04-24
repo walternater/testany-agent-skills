@@ -100,12 +100,12 @@ spec:
 
 **Case A (04E41DDE)** 的 environment_variables:
 ```json
-[{ "name": "TOKEN", "type": "output", "value": "" }]
+[{ "name": "TOKEN", "type": "output", "value": "-" }]
 ```
 
 **Case B (FAFC249A)** 的 environment_variables:
 ```json
-[{ "name": "AUTH_TOKEN", "type": "env", "value": "" }]
+[{ "name": "AUTH_TOKEN", "type": "env", "value": "-" }]
 ```
 
 **Pipeline YAML**:

@@ -145,6 +145,18 @@ Import 路径特有的点：
 
 后端当前把 `private` / `workspace` 也视为 `restricted` 的兼容别名，但对 agent 文案和构造 payload，统一使用 `global | restricted` 更稳。
 
+### 导入后：提示凭证类变量改用 secrets 声明
+
+Import 会把脚本文件上传成 case，但**不负责**为 case 填 `environment_variables`（那是 `testany-case` / `testany-sync-case-env-from-source` 的职责）。
+
+导入完成后，如果脚本里有这些命名模式，主动提示用户在 `case_meta.environment_variables` 中把它们声明为 `type: secrets` + `secret_ref`，而不是明文 `type: env`：
+
+- `*_PASSWORD` / `*_PWD`
+- `*_TOKEN` / `*_APIKEY` / `*_API_KEY`
+- `*_SECRET` / `*_KEY`
+
+用户确认 `secret_ref` 的三个字段（`workspace_key` / `credential_safe_key` / `credential_key`）后，脚本里就可以直接读同名环境变量拿到凭证值。
+
 ---
 
 ## Phase 4：周期性同步

@@ -225,12 +225,15 @@ Platform case 类型
 |------|------|------|
 | `env` | 输入/普通配置（包括 relay 输入） | `API_BASE_URL`, `AUTH_TOKEN` |
 | `output` | Relay 输出 | `ACCESS_TOKEN`, `USER_ID` |
+| `secrets` | 引用 workspace Credential Safe 条目 | `PASSWORD`, `API_KEY` |
 
 > 约束（与平台校验一致）：
-> - `type` 仅支持 `env` 与 `output`
+> - `type` 支持 `env` / `output` / `secrets`
 > - `name` 必须以大写字母开头，只能包含大写字母、数字、下划线；同一 case 内必须唯一
-> - `name`/`value` 不能为空或仅空白字符；如需表达“空值”，请显式填 `-`
-> - 敏感凭证请使用 Secure key reference 绑定，并在代码中通过 `TESTANY_SECRETS_SERVICE` 获取
+> - `env` / `output`：`name`/`value` 不能为空或仅空白字符；如需表达"空值"，请显式填 `-`
+> - `secrets`：必须填 `secret_ref: { workspace_key, credential_safe_key, credential_key }`，**禁止**填 `value`；脚本里直接读同名环境变量即可（如 `os.getenv("PASSWORD")`）
+> - `secrets` 的 `credential_safe_key` / `credential_key` 如果未知，在注册阶段（`testany-case` skill）用 `testany_list_credential_safes` → `testany_list_credential_keys` 查询（两个工具都需要 `runtime_uuid`，返回签名 curl 由 agent 代为执行）；详细流程见 `testany-case/references/executors.md`
+> - `secrets` 读回时附带只读字段 `status`（`valid` / `blocked` / `invalid`）和 `status_reasons[]`；写入时不要传
 
 ---
 

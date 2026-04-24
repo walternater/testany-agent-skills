@@ -181,11 +181,15 @@ my-case.zip
 
 ## 环境变量类型
 
-| type | 用途 | 在日志中显示 |
-|------|------|-------------|
-| `env` | 普通环境变量，可接收 relay 传入 | 明文 |
-| `secret` | 敏感数据（密码、token） | 遮蔽 |
-| `output` | 输出变量，供其他 case relay 使用 | 明文 |
+| type | 用途 | 如何填 |
+|------|------|-------|
+| `env`（默认） | 普通环境变量、relay 输入 | 填 `value`（必填、非空） |
+| `output` | 输出变量，供 pipeline 中其他 case relay 消费 | 填 `value`（运行时由脚本写入，初始可用 `"-"` 占位） |
+| `secrets` | 引用 workspace 的 Credential Safe 条目 | 填 `secret_ref`（**禁止**填 `value`）；脚本里直接读同名环境变量即可 |
+
+**`secret_ref` 结构**：`{ workspace_key, credential_safe_key, credential_key }`，三个字段都必填。
+
+**`secrets` 行的只读字段**：读回时每条 `secrets` 行附带 `status`（`valid` / `blocked` / `invalid`）和 `status_reasons[]`；非 `valid` 要向用户说明原因。写入时不要传这两个字段。
 
 **配置示例**：
 ```json
@@ -193,8 +197,16 @@ my-case.zip
   "case_meta": {
     "environment_variables": [
       { "name": "API_URL", "type": "env", "value": "https://api.example.com" },
-      { "name": "API_KEY", "type": "secret", "value": "sk-xxx" },
-      { "name": "TOKEN", "type": "output", "value": "" }
+      {
+        "name": "API_KEY",
+        "type": "secrets",
+        "secret_ref": {
+          "workspace_key": "WKS",
+          "credential_safe_key": "WKS-CS-0001",
+          "credential_key": "prod-api-key"
+        }
+      },
+      { "name": "TOKEN", "type": "output", "value": "-" }
     ]
   }
 }
