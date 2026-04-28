@@ -72,6 +72,7 @@ argument-hint: "[操作] [描述]，如：注册这些 case packages、查看 A1
 | 批量更新 cases | Bulk Update | `testany_bulk_update_cases` |
 | 批量删除 cases | Bulk Delete | `testany_bulk_delete_cases` |
 | dry run 验证 | Validate | `testany_dry_run_case` → `testany_get_dry_run_result` |
+| 查看 dry run 日志 | Read | `testany_get_dry_run_log`（拼接出 logUrl + curlCommand，agent 代为执行） |
 
 ---
 
@@ -189,7 +190,8 @@ case 运行时可见的变量列表，每条有一个 `type`：
 
 如用户要求验证，或刚补齐了必填字段：
 1. `testany_dry_run_case`
-2. `testany_get_dry_run_result`
+2. `testany_get_dry_run_result` 轮询直到进入终态
+3. 如需排查（例如失败、想看实际 stdout），调 `testany_get_dry_run_log` 拿 `curlCommand` 后由 agent 代为执行拉取日志
 
 ### Phase 7: 明确 downstream handoff
 
@@ -299,12 +301,27 @@ Testany 使用 `case_labels` 实现虚拟目录结构：
 dry run 只验证 **case 本身是否 ready**，不替代 pipeline 编排验证。
 
 流程：
-1. `testany_dry_run_case`
-2. `testany_get_dry_run_result`
+1. `testany_dry_run_case` —— 触发 dry run，拿到 `dry_run_id`
+2. `testany_get_dry_run_result` —— 轮询直到 `dry_run_status` 进入终态
+3. （需要时）`testany_get_dry_run_log` —— 拼接 logUrl + 签名 curl，由 agent 代为执行拉日志
+
+`dry_run_status` 与 execution status 共用同一套数值：
+
+| 值 | 含义 | 是否终态 |
+|----|------|---------|
+| -1 | NOT_STARTED（排队中） | 否 |
+| 0 | RUNNING | 否 |
+| 1 | SUCCESS | 是 |
+| 2 | FAILURE | 是 |
+| 5 | CANCELLED | 是 |
+| 99 | ERROR | 是 |
+
+**常见误用**：把 `1 (SUCCESS)` 当成 RUNNING 持续轮询。看到 `1` 就该停下来，要么报告成功、要么调 `testany_get_dry_run_log` 看输出。
 
 典型用途：
 - 新上传脚本后确认 case 已可运行
 - 更新必填字段后确认配置完整
+- 失败时通过 `testany_get_dry_run_log` 看 stdout / 错误堆栈，定位是脚本 bug 还是配置 bug
 
 ---
 
