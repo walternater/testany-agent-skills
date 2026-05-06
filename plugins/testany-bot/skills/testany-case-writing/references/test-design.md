@@ -177,7 +177,7 @@ AC7: 信息不可见     →      Case 4: 信息保护（独立场景）
 > 注意：上表中的别名仅用于讲解；实际 Pipeline YAML 的 `run`/`whenPassed`/`whenFailed` 必须填写 Testany Test Case Key（8 位大写十六进制，如 `AC2F5A50`）。
 
 ```yaml
-kind: rule/v1.2
+kind: rule/v1.3
 spec:
   rules:
     - run: A1B2C3D4        # AC1_BTN: 独立 UI 测试

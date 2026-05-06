@@ -3,7 +3,7 @@
 ## 基本结构
 
 ```yaml
-kind: rule/v1.2
+kind: rule/v1.3
 spec:
   rules:
     - run: 'A1B2C3D4'           # 第一个 case（无依赖）
@@ -75,7 +75,7 @@ spec:
 ### 顺序执行（无依赖）
 
 ```yaml
-kind: rule/v1.2
+kind: rule/v1.3
 spec:
   rules:
     - run: 'A1B2C3D4'
@@ -86,7 +86,7 @@ spec:
 ### 链式依赖
 
 ```yaml
-kind: rule/v1.2
+kind: rule/v1.3
 spec:
   rules:
     - run: 'A1B2C3D4'  # Login
@@ -110,7 +110,7 @@ spec:
 
 **Pipeline YAML**:
 ```yaml
-kind: rule/v1.2
+kind: rule/v1.3
 spec:
   rules:
     - run: '04E41DDE'  # Login → 输出 TOKEN
@@ -125,7 +125,7 @@ spec:
 ### 失败后执行（清理场景）
 
 ```yaml
-kind: rule/v1.2
+kind: rule/v1.3
 spec:
   rules:
     - run: 'A1B2C3D4'  # Main test
